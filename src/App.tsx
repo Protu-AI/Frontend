@@ -1,24 +1,24 @@
-import { BrowserRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import AppRoutes from './routes';
+import { ChatLayout } from './features/chat/components/ChatLayout';
+import { Navbar } from './components/common/Navbar';
+import { ThemeProvider } from 'next-themes';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+export default function App() {
+  const handleSendMessage = (content: string) => {
+    console.log('Sending message:', content);
+  };
 
-function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem={false}
+      disableTransitionOnChange={true}
+    >
+      <div className="flex h-screen w-full flex-col overflow-hidden bg-gradient-to-b from-white to-[#EFE9FC] dark:from-[#1C0B43] dark:to-[#1C0B43]">
+        <Navbar />
+        <div className="h-8" />
+        <ChatLayout onSendMessage={handleSendMessage} />
+      </div>
+    </ThemeProvider>
   );
 }
-
-export default App;

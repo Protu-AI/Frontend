@@ -5,15 +5,15 @@ export function ThemeToggle() {
   const { theme, toggleTheme } = useThemeStore();
 
   return (
-    <button
+    <button 
       onClick={toggleTheme}
-      className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
+      className="w-8 h-8 rounded-full flex items-center justify-center"
       aria-label="Toggle theme"
     >
       {theme === 'dark' ? (
-        <Sun className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+        <Sun className="h-5 w-5 text-[#5F24E0]" />
       ) : (
-        <Moon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+        <Moon className="h-5 w-5 text-[#5F24E0]" />
       )}
     </button>
   );
