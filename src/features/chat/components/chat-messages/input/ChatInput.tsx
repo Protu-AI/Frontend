@@ -48,27 +48,27 @@ export function ChatInput({ onSendMessage, disabled, className }: ChatInputProps
   return (
     <div className={cn("relative", className)}>
       <button
-        className="absolute left-[27px] top-[27px] z-10 flex items-center justify-center"
+        className="absolute left-6 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center h-6 w-6"
         onMouseEnter={() => setIsHoveringDoc(true)}
         onMouseLeave={() => setIsHoveringDoc(false)}
       >
         <FileText 
           className={cn(
-            "h-6 w-6 transition-colors",
+            "h-full w-full transition-colors",
             isHoveringDoc ? "text-[#5F24E0] dark:text-[#FFBF00]" : "text-[#A6B5BB] dark:text-[#EFE9FC]"
           )}
         />
       </button>
       <button 
         className={cn(
-          "absolute right-[27px] top-[27px] z-10 flex items-center justify-center",
+          "absolute right-6 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center h-6 w-6",
           message.trim() ? "cursor-pointer" : "cursor-default"
         )}
         onClick={message.trim() ? handleSend : undefined}
       >
         <SendHorizontal 
           className={cn(
-            "h-6 w-6 transition-colors",
+            "h-full w-full transition-colors",
             message.trim() ? "text-[#5F24E0] dark:text-[#FFBF00]" : "text-[#A6B5BB] dark:text-[#EFE9FC]"
           )}
         />

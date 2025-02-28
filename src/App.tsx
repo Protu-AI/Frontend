@@ -1,6 +1,13 @@
+import { Routes, Route } from 'react-router-dom';
+import { Home } from './pages/Home';
+import { SignIn } from './pages/SignIn';
+import { SignUp } from './pages/SignUp';
 import { ChatLayout } from './features/chat/components/ChatLayout';
-import { Navbar } from './components/common/Navbar';
-import { ThemeProvider } from 'next-themes';
+import { MainLayout } from './layouts/MainLayout';
+import { ForgotPassword } from './pages/ForgotPassword/ForgotPassword';
+import { ForgotPasswordStep2 } from './pages/ForgotPassword/ForgotPasswordStep2';
+import { ForgotPasswordStep3 } from './pages/ForgotPassword/ForgotPasswordStep3';
+import { ForgotPasswordStep4 } from './pages/ForgotPassword/ForgotPasswordStep4';
 
 export default function App() {
   const handleSendMessage = (content: string) => {
@@ -8,17 +15,22 @@ export default function App() {
   };
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="light"
-      enableSystem={false}
-      disableTransitionOnChange={true}
-    >
-      <div className="flex h-screen w-full flex-col overflow-hidden bg-gradient-to-b from-white to-[#EFE9FC] dark:from-[#1C0B43] dark:to-[#1C0B43]">
-        <Navbar />
-        <div className="h-8" />
-        <ChatLayout onSendMessage={handleSendMessage} />
-      </div>
-    </ThemeProvider>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/signin" element={<SignIn />} />
+      <Route path="/signup" element={<SignUp />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/forgot-password/step2" element={<ForgotPasswordStep2 />} />
+      <Route path="/forgot-password/step3" element={<ForgotPasswordStep3 />} />
+      <Route path="/forgot-password/step4" element={<ForgotPasswordStep4 />} />
+      <Route
+        path="/chatbot"
+        element={
+          <MainLayout>
+            <ChatLayout onSendMessage={handleSendMessage} />
+          </MainLayout>
+        }
+      />
+    </Routes>
   );
 }

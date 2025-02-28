@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { ChatListHeader } from './ChatListHeader';
 import { ChatSearch } from './ChatSearch';
 import { ChatListGroup } from './ChatListGroup';
-import { groupBy } from 'lodash';
-import { startOfDay } from 'date-fns';
+import { groupChatSessionsByDate } from '@/lib/utils/chat';
 import { cn } from '@/lib/utils';
 
 interface ChatListProps {
@@ -31,9 +30,7 @@ export function ChatList({
     session.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const groupedSessions = groupBy(filteredSessions, (session) =>
-    startOfDay(session.timestamp).getTime()
-  );
+  const groupedSessions = groupChatSessionsByDate(filteredSessions);
 
   return (
     <div className={cn(

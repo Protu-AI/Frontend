@@ -1,16 +1,22 @@
-import { Navbar } from '../components/layout/Navbar';
-import { ChatLayout } from '../components/chat/ChatLayout';
-import { useThemeStore } from '../store/themeStore';
+import { useTheme } from 'next-themes';
+import { cn } from '@/lib/utils';
+import { MainLayout } from '@/layouts/MainLayout';
 
-export default function Home() {
-  const theme = useThemeStore((state) => state.theme);
+export function Home() {
+  const { theme } = useTheme();
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#1C0B43]' : 'bg-white'}`}>
-      <Navbar />
-      <div className="pt-[72px]">
-        <ChatLayout />
+    <MainLayout>
+      <div className="flex-1 flex items-center justify-center">
+        <h1 
+          className={cn(
+            "font-['Archivo'] text-[101px] font-semibold",
+            theme === 'dark' ? "text-[#9F7CEC]" : "text-[#5F24E0]"
+          )}
+        >
+          Home
+        </h1>
       </div>
-    </div>
+    </MainLayout>
   );
 }

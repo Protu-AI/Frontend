@@ -21,7 +21,7 @@ export function ChatLayout({ onSendMessage }: ChatLayoutProps) {
   };
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-1 overflow-hidden pt-8">
       <div 
         className={cn(
           "ml-8 transition-all duration-300 ease-in-out",
