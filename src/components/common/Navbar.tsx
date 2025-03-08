@@ -1,10 +1,10 @@
-import { MainNav } from './MainNav';
-import { ThemeToggle } from './ThemeToggle';
-import { UserNav } from './UserNav';
-import { AuthButtons } from '../auth/AuthButtons';
-import { Brain } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { MainNav } from "./MainNav";
+import { ThemeToggle } from "./ThemeToggle";
+import { UserNav } from "./UserNav";
+import { AuthButtons } from "../auth/AuthButtons";
+import { Brain } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Navbar() {
   const { user } = useAuth();
@@ -14,7 +14,9 @@ export function Navbar() {
       <div className="flex h-[4.5rem] items-center justify-between px-8">
         <Link to="/" className="flex items-center gap-2">
           <Brain className="h-10 w-10 text-[#0E1117] dark:text-[#EFE9FC]" />
-          <span className="font-semibold text-2xl text-[#0E1117] dark:text-[#EFE9FC]">PROTU</span>
+          <span className="font-semibold text-2xl text-[#0E1117] dark:text-[#EFE9FC]">
+            PROTU
+          </span>
         </Link>
         <MainNav className="flex-1 px-16" />
         <div className="flex items-center space-x-4">

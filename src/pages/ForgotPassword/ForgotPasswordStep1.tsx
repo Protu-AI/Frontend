@@ -1,29 +1,87 @@
-import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
-import { Fingerprint } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useFormValidation } from '@/components/auth/signup/useFormValidation';
+import React, { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import { Fingerprint } from "lucide-react";
+import { motion } from "framer-motion";
+import { useFormValidation } from "@/components/auth/signup/useFormValidation";
 
 interface ForgotPasswordStep1Props {
   setStep: (step: number) => void;
+  email: string;
+  setEmail: (email: string) => void;
 }
 
-export function ForgotPasswordStep1({ setStep }: ForgotPasswordStep1Props) {
-  const [email, setEmail] = useState('');
+export function ForgotPasswordStep1({
+  setStep,
+  email,
+  setEmail,
+}: ForgotPasswordStep1Props) {
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">();
+  const [isLoading, setIsLoading] = useState(false);
   const { validateField, errors } = useFormValidation();
 
-  const handleSendResetCode = () => {
-    if (validateField('email', email)) {
+  const handleSendResetCode = async () => {
+    // Validate the email field
+    if (!validateField("email", email)) {
+      setMessage("Please enter a valid email address");
+      setMessageType("error");
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage("");
+    setMessageType(undefined);
+
+    try {
+      // Make the API call
+      const response = await fetch(
+        "http://localhost:8085/api/v1/auth/forgot-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+          }),
+        }
+      );
+
+      // Handle non-200 responses
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to send reset code");
+      }
+
+      // Parse the response
+      const responseData = await response.json();
+      console.log("Reset code sent successfully:", responseData);
+
+      // Show success message
+      setMessage(
+        "If the provided email exists, a new password reset verification code is sent to your inbox. Please check your email to proceed."
+      );
+      setMessageType("success");
+
+      // Move to the next step
       setStep(2);
+    } catch (error) {
+      console.error("Error sending reset code:", error);
+
+      // Show error message
+      setMessage("Failed to send reset code");
+      setMessageType("error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+    animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   };
 
   return (
@@ -63,11 +121,11 @@ export function ForgotPasswordStep1({ setStep }: ForgotPasswordStep1Props) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={cn(
-              "w-full h-[80px] rounded-[24px] border border-[#A6B5BB] bg-white font-['Archivo'] text-[16px] focus:outline-none focus:border-[#5F24E0]",
+              'w-full h-[80px] rounded-[24px] border border-[#A6B5BB] bg-white font-["Archivo"] text-[16px] focus:outline-none focus:border-[#5F24E0]',
               email ? "text-[#0E1117]" : "text-[#A6B5BB]",
               "pl-[95px]"
             )}
-            style={{ fontFamily: 'Archivo', fontWeight: '400' }}
+            style={{ fontFamily: "Archivo", fontWeight: "400" }}
           />
         </div>
         {errors.email && (
@@ -75,12 +133,28 @@ export function ForgotPasswordStep1({ setStep }: ForgotPasswordStep1Props) {
         )}
       </div>
 
-      <Button className="mt-[24px] w-[400px] h-[80px] bg-[#5F24E0] hover:bg-[#9F7CEC] text-[#EFE9FC] font-['Archivo'] text-[22px] font-semibold rounded-[24px]" onClick={handleSendResetCode}>
-        Send Reset Code
-      </Button>
-      <div
-        className="mt-[24px]"
+      {/* Feedback Message */}
+      {message && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={cn(
+            "mt-4 text-center w-[400px]",
+            messageType === "success" ? "text-green-600" : "text-red-500"
+          )}
+        >
+          {message}
+        </motion.div>
+      )}
+
+      <Button
+        className="mt-[24px] w-[400px] h-[80px] bg-[#5F24E0] hover:bg-[#9F7CEC] text-[#EFE9FC] font-['Archivo'] text-[22px] font-semibold rounded-[24px]"
+        onClick={handleSendResetCode}
+        disabled={isLoading}
       >
+        {isLoading ? "Sending..." : "Send Reset Code"}
+      </Button>
+      <div className="mt-[24px]">
         <Link
           to="/signin"
           className="font-['Archivo'] text-[16px] font-semibold text-[#5F24E0] hover:text-[#9F7CEC] transition-colors"

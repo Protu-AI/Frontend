@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { ForgotPasswordStep1 } from './ForgotPasswordStep1';
-import { ForgotPasswordStep2 } from './ForgotPasswordStep2';
-import { ForgotPasswordStep3 } from './ForgotPasswordStep3';
-import { ForgotPasswordStep4 } from './ForgotPasswordStep4';
-import { ForgotPasswordHeader } from '@/components/ForgotPassword/ForgotPasswordHeader';
-import { ForgotPasswordFooter } from '@/components/ForgotPassword/ForgotPasswordFooter';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+import { ForgotPasswordStep1 } from "./ForgotPasswordStep1";
+import { ForgotPasswordStep2 } from "./ForgotPasswordStep2";
+import { ForgotPasswordStep3 } from "./ForgotPasswordStep3";
+import { ForgotPasswordStep4 } from "./ForgotPasswordStep4";
+import { ForgotPasswordHeader } from "@/components/ForgotPassword/ForgotPasswordHeader";
+import { ForgotPasswordFooter } from "@/components/ForgotPassword/ForgotPasswordFooter";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function ForgotPassword() {
   const [step, setStep] = useState(1);
+  const [email, setEmail] = useState("");
 
   const containerVariants = {
     initial: { opacity: 0 },
@@ -34,17 +35,21 @@ export function ForgotPassword() {
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div key="step1" variants={containerVariants}>
-              <ForgotPasswordStep1 setStep={setStep} />
+              <ForgotPasswordStep1
+                setStep={setStep}
+                email={email}
+                setEmail={setEmail}
+              />
             </motion.div>
           )}
           {step === 2 && (
             <motion.div key="step2" variants={containerVariants}>
-              <ForgotPasswordStep2 setStep={setStep} />
+              <ForgotPasswordStep2 setStep={setStep} email={email} />
             </motion.div>
           )}
           {step === 3 && (
             <motion.div key="step3" variants={containerVariants}>
-              <ForgotPasswordStep3 setStep={setStep} />
+              <ForgotPasswordStep3 setStep={setStep} email={email} />
             </motion.div>
           )}
           {step === 4 && (

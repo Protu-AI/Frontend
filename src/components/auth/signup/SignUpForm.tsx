@@ -1,55 +1,58 @@
-import { Contact, Mail, Phone } from 'lucide-react';
-import { InputWithIcon } from './InputWithIcon';
-import { GenderSelect } from './GenderSelect';
-import { useState } from 'react';
-import { VerificationStep } from './VerificationStep';
-import { FinalStep } from './FinalStep';
-import { SignUpButton } from './SignUpButton';
-import { AnimatePresence, motion } from 'framer-motion';
-import { useFormValidation } from './useFormValidation';
+import { Contact, Mail, Phone } from "lucide-react";
+import { InputWithIcon } from "./InputWithIcon";
+import { GenderSelect } from "./GenderSelect";
+import { useState } from "react";
+import { VerificationStep } from "./VerificationStep";
+import { SecondStep } from "./SecondStep";
+import { SignUpButton } from "./SignUpButton";
+import { AnimatePresence, motion } from "framer-motion";
 
 export function SignUpForm() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    gender: '',
-    verificationCode: '',
-    username: '',
-    password: '',
-    confirmPassword: ''
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    gender: "",
+    verificationCode: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
   });
 
-  const { errors, validateStep } = useFormValidation();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (validateStep(step, formData)) {
-      setStep(prev => prev + 1);
-    }
+  const updateField = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const updateField = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleNext = () => {
+    setStep(2);
+  };
+
+  const nextStep = () => {
+    setStep(3);
   };
 
   if (step === 2) {
-    return <VerificationStep email={formData.email} onVerify={() => setStep(3)} />;
+    return (
+      <SecondStep formData={formData} nextStep={nextStep} />
+    );
   }
 
   if (step === 3) {
-    return <FinalStep onSubmit={() => {}} />;
+    return <VerificationStep email={formData.email} />;
   }
 
   return (
-    <motion.form 
-      onSubmit={handleSubmit}
+    <motion.form
       className="flex-1 flex flex-col items-center"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleNext();
+      }}
     >
       <div className="text-center mb-16">
         <h1 className="font-['Archivo'] text-[48px] font-semibold text-[#5F24E0] mb-2">
@@ -67,14 +70,12 @@ export function SignUpForm() {
             placeholder="First Name"
             showDivider
             value={formData.firstName}
-            onChange={(value) => updateField('firstName', value)}
-            error={errors.firstName}
+            onChange={(value) => updateField("firstName", value)}
           />
           <InputWithIcon
             placeholder="Last Name"
             value={formData.lastName}
-            onChange={(value) => updateField('lastName', value)}
-            error={errors.lastName}
+            onChange={(value) => updateField("lastName", value)}
           />
         </div>
 
@@ -84,8 +85,7 @@ export function SignUpForm() {
           type="email"
           showDivider
           value={formData.email}
-          onChange={(value) => updateField('email', value)}
-          error={errors.email}
+          onChange={(value) => updateField("email", value)}
         />
 
         <InputWithIcon
@@ -94,19 +94,17 @@ export function SignUpForm() {
           type="tel"
           showDivider
           value={formData.phone}
-          onChange={(value) => updateField('phone', value)}
-          error={errors.phone}
+          onChange={(value) => updateField("phone", value)}
         />
 
         <GenderSelect
           value={formData.gender}
-          onChange={(value) => updateField('gender', value)}
-          error={errors.gender}
+          onChange={(value) => updateField("gender", value)}
         />
 
         <div className="flex justify-center mt-16">
           <AnimatePresence mode="wait">
-            <SignUpButton type="submit" key={`step-${step}-button`}>
+            <SignUpButton type="submit" key="next-button">
               Next
             </SignUpButton>
           </AnimatePresence>
