@@ -6,6 +6,7 @@ import {
   useEffect,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import { config } from "../../config";
 
 interface User {
   email: string;
@@ -35,14 +36,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (userId && token) {
         try {
-          const response = await fetch(
-            `http://localhost:8085/api/v1/users/${userId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          const response = await fetch(`${config.apiUrl}/v1/users/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
 
           if (!response.ok) {
             if (response.status === 401) {
@@ -77,19 +75,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (credentials: { email: string; password: string }) => {
     try {
       // 1. Authenticate user
-      const loginResponse = await fetch(
-        "http://localhost:8085/api/v1/auth/sign-in",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userIdentifier: credentials.email,
-            password: credentials.password,
-          }),
-        }
-      );
+      const loginResponse = await fetch(`${config.apiUrl}/v1/auth/sign-in`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userIdentifier: credentials.email,
+          password: credentials.password,
+        }),
+      });
 
       if (!loginResponse.ok) throw new Error("Login failed");
       // 2. Extract token and user ID from login response
@@ -104,14 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("refreshToken", refreshToken);
 
       // 4. Fetch user details using the stored token and ID
-      const userResponse = await fetch(
-        `http://localhost:8085/api/v1/users/${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const userResponse = await fetch(`${config.apiUrl}/v1/users/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!userResponse.ok) throw new Error("Failed to fetch user data");
 

@@ -1,8 +1,13 @@
 export interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant';
+  id: string; // A string representing the unique identifier for the message
+  content: string; // The content of the message (e.g., text)
+  role: "user" | "assistant" | "system";
   timestamp: Date;
+  attachment?: {
+    // Optional attachment field
+    name: string; // The name of the attached file
+    type: string; // The MIME type of the attached file
+  };
 }
 
 export interface ChatSession {

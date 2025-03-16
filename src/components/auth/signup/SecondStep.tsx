@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useFormValidation } from "./useFormValidation";
 // import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { config } from "../../../../config";
 
 interface SecondStepProps {
   formData: {
@@ -36,23 +37,20 @@ export function SecondStep({ formData, nextStep }: SecondStepProps) {
     e.preventDefault();
     if (validateStep(3, { username, password, confirmPassword })) {
       try {
-        const response = await fetch(
-          "http://localhost:8085/api/v1/auth/sign-up",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              firstName: formData.firstName,
-              lastName: formData.lastName,
-              username: username,
-              email: formData.email,
-              password: password,
-              phoneNumber: formData.phone,
-            }),
-          }
-        );
+        const response = await fetch(`${config.apiUrl}/v1/auth/sign-up`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            username: username,
+            email: formData.email,
+            password: password,
+            phoneNumber: formData.phone,
+          }),
+        });
 
         const data = await response.json();
 

@@ -5,6 +5,7 @@ import { AnimatedButton } from "./AnimatedButton";
 import { motion, useAnimation } from "framer-motion";
 import { useEffect } from "react";
 import { useFormValidation } from "../signup/useFormValidation";
+import { config } from "../../../../config";
 
 interface SignInStepOneProps {
   email: string;
@@ -24,7 +25,7 @@ export function SignInStepOne({
     if (validateField("email", email)) {
       try {
         const response = await fetch(
-          `http://localhost:8085/api/v1/auth/validate-identifier?userIdentifier=${email}`,
+          `${config.apiUrl}/v1/auth/validate-identifier?userIdentifier=${email}`,
           {
             method: "POST",
             headers: {

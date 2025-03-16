@@ -4,6 +4,7 @@ import { SignUpButton } from "./SignUpButton";
 import { AnimatePresence, motion } from "framer-motion";
 import { useFormValidation } from "./useFormValidation";
 import { useNavigate } from "react-router-dom";
+import { config } from "../../../../config";
 
 interface VerificationStepProps {
   email: string;
@@ -22,19 +23,16 @@ export function VerificationStep({ email }: VerificationStepProps) {
     e.preventDefault();
     if (validateField("verificationCode", code)) {
       try {
-        const response = await fetch(
-          "http://localhost:8085/api/v1/auth/verify-email",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              email: email,
-              OTP: code,
-            }),
-          }
-        );
+        const response = await fetch(`${config.apiUrl}/v1/auth/verify-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            OTP: code,
+          }),
+        });
 
         const data = await response.json();
 

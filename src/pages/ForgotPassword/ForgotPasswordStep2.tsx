@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Fingerprint } from "lucide-react";
 import { motion } from "framer-motion";
 import { useFormValidation } from "@/components/auth/signup/useFormValidation";
+import { config } from "../../../config";
 
 interface ForgotPasswordStep2Props {
   setStep: (step: number) => void;
@@ -38,7 +39,7 @@ export function ForgotPasswordStep2({
     try {
       // Make the API call
       const response = await fetch(
-        "http://localhost:8085/api/v1/auth/verify-password-otp",
+        `${config.apiUrl}/v1/auth/verify-password-otp`,
         {
           method: "POST",
           headers: {

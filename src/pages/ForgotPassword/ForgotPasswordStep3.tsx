@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Fingerprint, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { useFormValidation } from "@/components/auth/signup/useFormValidation";
+import { config } from "../../../config";
 
 interface ForgotPasswordStep3Props {
   setStep: (step: number) => void;
@@ -40,19 +41,16 @@ export function ForgotPasswordStep3({
 
     try {
       // Make the API call
-      const response = await fetch(
-        "http://localhost:8085/api/v1/auth/reset-password",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: email,
-            password: password,
-          }),
-        }
-      );
+      const response = await fetch(`${config.apiUrl}/v1/auth/reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
 
       // Handle non-200 responses
       if (!response.ok) {
