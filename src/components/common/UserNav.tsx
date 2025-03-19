@@ -36,7 +36,12 @@ export function UserNav({ user }: UserNavProps) {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent
+        className="w-56"
+        align="end"
+        forceMount
+        style={{ opacity: 0.95 }}
+      >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{user.userName}</p>
@@ -46,10 +51,19 @@ export function UserNav({ user }: UserNavProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Profile</DropdownMenuItem>
-        <DropdownMenuItem>Settings</DropdownMenuItem>
+        <DropdownMenuItem className="hover:bg-[#5F24E0] hover:text-white cursor-pointer">
+          Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem className="hover:bg-[#5F24E0] hover:text-white cursor-pointer">
+          Settings
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={signOut}>Log out</DropdownMenuItem>
+        <DropdownMenuItem
+          className="hover:bg-[#5F24E0] hover:text-white cursor-pointer"
+          onClick={signOut}
+        >
+          Log out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

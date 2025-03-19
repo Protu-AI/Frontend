@@ -8,6 +8,7 @@ interface ChatContextType {
   handleSendMessage: (content: string, file?: File) => Promise<any>;
   handleNewChat: () => Promise<void>;
   handleSelectSession: (sessionId: string) => void;
+  deleteSession: (sessionId: string) => Promise<void>; // Add this
   setSessions: (newSessions: ChatSession[]) => void;
   error: string | null;
   setError: (error: string | null) => void;
@@ -32,6 +33,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     setError(error);
   };
 
+  // Function to create a new chat
   const createChat = async (name: string) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -55,6 +57,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     return response.json();
   };
 
+  // Function to handle new chat creation
   const handleNewChat = async () => {
     const name = prompt("Enter the name of the chat:");
     if (!name) return;
@@ -85,6 +88,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Function to send a message
   const handleSendMessage = async (content: string, file?: File) => {
     if (!content && !file) {
       console.log("No content or file to send.");
@@ -127,19 +131,52 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       const responseData = await response.json();
       console.log("Message sent successfully:", responseData);
       return responseData;
-
-      //   if (responseData.error) {
-      //     console.log("Failed to get AI response:", responseData);
-      //   } else {
-      //     console.log("AI response received:", responseData);
-      //   }
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
 
+  // Function to select a session
   const handleSelectSession = (sessionId: string) => {
     setCurrentSessionId(sessionId);
+  };
+
+  // Function to delete a session
+  const deleteSession = async (sessionId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("No token found in local storage.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${config.apiUrl}/v1/chats/${sessionId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete chat session");
+      }
+
+      // Remove the deleted session from the sessions list
+      setSessions((prevSessions) =>
+        prevSessions.filter((session) => session.id !== sessionId)
+      );
+
+      // If the deleted session was the current session, clear the current session
+      if (sessionId === currentSessionId) {
+        setCurrentSessionId(undefined);
+      }
+
+      setError(null);
+    } catch (error) {
+      console.error("Error deleting chat session:", error);
+      setError("An unexpected error occurred");
+    }
   };
 
   return (
@@ -150,6 +187,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         handleSendMessage,
         handleNewChat,
         handleSelectSession,
+        deleteSession,
         setSessions: handleSetSessions,
         error,
         setError: handleSetError,
