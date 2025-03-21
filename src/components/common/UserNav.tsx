@@ -4,65 +4,94 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { User, LogOut, Settings as Gear } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-interface User {
+interface UserProps {
   email: string;
-  userName: string;
+  name: string;
   avatar: string;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
 }
 
 interface UserNavProps {
-  user: User;
+  user: UserProps;
 }
 
 export function UserNav({ user }: UserNavProps) {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleMyProfileClick = () => {
+    navigate("/settings/contact-info");
+  };
+
+  const handleSettingsClick = () => {
+    navigate("/settings/account-security");
+  };
+
+  // Get the first letter of name safely or use a fallback
+  const getNameInitial = () => {
+    if (!user || !user.name || user.name.length === 0) {
+      return "U"; // Default fallback if name is not available
+    }
+    return user.name[0];
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8 border-2 border-[#5F24E0]">
-            <AvatarImage src={user.avatar} alt={user.userName} />
-            <AvatarFallback>{user.userName[0]}</AvatarFallback>
-          </Avatar>
-        </Button>
+        <div className="cursor-pointer">
+          <Button
+            variant="ghost"
+            className="relative h-8 w-8 rounded-full cursor-pointer"
+          >
+            <Avatar className="h-8 w-8 border-2 border-[#5F24E0] cursor-pointer">
+              {user?.avatar && (
+                <AvatarImage
+                  src={user.avatar}
+                  alt={user?.name || "User"}
+                  className="cursor-pointer"
+                />
+              )}
+              <AvatarFallback className="cursor-pointer">
+                {getNameInitial()}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-56"
+        className="w-56 p-4 bg-[#EFE9FC] rounded-l-lg rounded-br-lg rounded-bl-lg font-normal text-left text-lg font-['Archivo'] -translate-x-8"
         align="end"
+        sideOffset={8}
+        side="bottom"
         forceMount
-        style={{ opacity: 0.95 }}
       >
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.userName}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
-            </p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="hover:bg-[#5F24E0] hover:text-white cursor-pointer">
-          Profile
+        <DropdownMenuItem
+          onClick={handleMyProfileClick}
+          className="flex items-center gap-2 text-[#0E1117] font-normal text-lg font-['Archivo'] p-0 w-full justify-start cursor-pointer mb-4"
+        >
+          <User size={16} color="#0E1117" />
+          My Profile
         </DropdownMenuItem>
-        <DropdownMenuItem className="hover:bg-[#5F24E0] hover:text-white cursor-pointer">
+        <DropdownMenuItem
+          onClick={handleSettingsClick}
+          className="flex items-center gap-2 text-[#0E1117] font-normal text-lg font-['Archivo'] p-0 w-full justify-start cursor-pointer mb-4"
+        >
+          <Gear size={16} color="#0E1117" />
           Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="hover:bg-[#5F24E0] hover:text-white cursor-pointer"
           onClick={signOut}
+          className="flex items-center gap-2 text-[#0E1117] font-normal text-lg font-['Archivo'] p-0 w-full justify-start cursor-pointer"
         >
-          Log out
+          <LogOut size={16} color="#0E1117" />
+          Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
