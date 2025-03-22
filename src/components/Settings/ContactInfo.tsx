@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Pencil } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { config } from "../../../config";
 
 const headingStyle = {
   color: "#0E1117",
@@ -78,6 +79,54 @@ const ContactInfo: React.FC = () => {
     }
   };
 
+  const handleAttachPhoto = async () => {
+    if (!selectedFile) {
+      alert("Please select a file first.");
+      return;
+    }
+
+    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("token");
+
+    if (!userId || !token) {
+      alert("User ID or token is missing. Please log in again.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const response = await fetch(
+        `${config.apiUrl}/v1/users/${userId}/profile-picture`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (response.ok) {
+        alert("Profile picture updated successfully!");
+        setIsOpen(false);
+        setSelectedFile(null);
+        // Optionally, you can refresh the user data here
+      } else {
+        const errorData = await response.json();
+        alert(
+          `Failed to update profile picture: ${
+            errorData.message || "Unknown error"
+          }`
+        );
+      }
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+      alert("An error occurred while updating the profile picture.");
+    }
+  };
+
   const editButtonStyle = {
     color: "#A6B5BB",
     backgroundColor: "white",
@@ -113,7 +162,7 @@ const ContactInfo: React.FC = () => {
               <span>Image failed to load</span>
             ) : (
               <img
-                src="https://i.pravatar.cc/110"
+                src={user?.avatar ? user.avatar : "https://i.pravatar.cc/110"}
                 alt="Profile"
                 onError={handleImageError}
                 style={{
@@ -246,9 +295,7 @@ const ContactInfo: React.FC = () => {
                     Cancel
                   </button>
                   <button
-                    onClick={() => {
-                      alert("Attach photo clicked!");
-                    }}
+                    onClick={handleAttachPhoto}
                     style={{
                       fontFamily: "Archivo",
                       fontWeight: 600,
