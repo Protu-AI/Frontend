@@ -1,3 +1,3 @@
 export const config = {
-  apiUrl: process.env.API_URL || "YOUR_API_URL",
+  apiUrl: import.meta.env.VITE_API_URL || "http://default-api-url.com",
 };

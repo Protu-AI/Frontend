@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SettingsSection from "@/components/Settings/SettingsSection";
 import SettingsHeading from "./SettingsHeading";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Lock } from "lucide-react";
+import { Lock, Eye, EyeOff } from "lucide-react"; // Import eye icons
+import { useAuth } from "@/contexts/AuthContext";
+import { config } from "../../../config";
 
 const AccountSecurity: React.FC = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -19,6 +21,12 @@ const AccountSecurity: React.FC = () => {
   const [currentPasswordError, setCurrentPasswordError] = useState("");
   const [newPasswordError, setNewPasswordError] = useState("");
   const [confirmNewPasswordError, setConfirmNewPasswordError] = useState("");
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false); // Toggle for current password
+  const [showNewPassword, setShowNewPassword] = useState(false); // Toggle for new password
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Toggle for confirm password
+
+  const { user } = useAuth();
 
   const labelStyle = {
     color: "#A6B5BB",
@@ -56,23 +64,14 @@ const AccountSecurity: React.FC = () => {
     if (!currentPassword) {
       errorMessage = "Current password is required";
       isValid = false;
-    } else if (currentPassword.length < 8) {
-      errorMessage = "Current password must be at least 8 characters";
+    } else if (currentPassword.length < 7) {
+      errorMessage = "Current password must be at least 7 characters";
       isValid = false;
-    } else if (!/[A-Z]/.test(currentPassword)) {
-      errorMessage =
-        "Current password must contain at least one uppercase letter";
-      isValid = false;
-    } else if (!/[a-z]/.test(currentPassword)) {
-      errorMessage =
-        "Current password must contain at least one lowercase letter";
+    } else if (!/[A-Za-z]/.test(currentPassword)) {
+      errorMessage = "Current password must contain at least one letter";
       isValid = false;
     } else if (!/[0-9]/.test(currentPassword)) {
       errorMessage = "Current password must contain at least one number";
-      isValid = false;
-    } else if (!/[!@#$%^&*]/.test(currentPassword)) {
-      errorMessage =
-        "Current password must contain at least one special character";
       isValid = false;
     }
 
@@ -87,20 +86,14 @@ const AccountSecurity: React.FC = () => {
     if (!newPassword) {
       errorMessage = "New password is required";
       isValid = false;
-    } else if (newPassword.length < 8) {
-      errorMessage = "New password must be at least 8 characters";
+    } else if (newPassword.length < 7) {
+      errorMessage = "New password must be at least 7 characters";
       isValid = false;
-    } else if (!/[A-Z]/.test(newPassword)) {
-      errorMessage = "New password must contain at least one uppercase letter";
-      isValid = false;
-    } else if (!/[a-z]/.test(newPassword)) {
-      errorMessage = "New password must contain at least one lowercase letter";
+    } else if (!/[A-Za-z]/.test(newPassword)) {
+      errorMessage = "New password must contain at least one letter";
       isValid = false;
     } else if (!/[0-9]/.test(newPassword)) {
       errorMessage = "New password must contain at least one number";
-      isValid = false;
-    } else if (!/[!@#$%^&*]/.test(newPassword)) {
-      errorMessage = "New password must contain at least one special character";
       isValid = false;
     }
 
@@ -109,18 +102,24 @@ const AccountSecurity: React.FC = () => {
   };
 
   const validateConfirmNewPassword = () => {
-    if (!confirmNewPassword) {
+    if (!confirmNewPassword.trim()) {
       setConfirmNewPasswordError("Confirm new password is required");
       return false;
     } else if (newPassword !== confirmNewPassword) {
       setConfirmNewPasswordError("Passwords do not match");
       return false;
+    } else {
+      setConfirmNewPasswordError(""); // Clear the error if passwords match
+      return true;
     }
-    setConfirmNewPasswordError("");
-    return true;
   };
 
-  const handleUpdatePassword = () => {
+  // Re-run validation when newPassword or confirmNewPassword changes
+  useEffect(() => {
+    validateConfirmNewPassword();
+  }, [newPassword, confirmNewPassword]);
+
+  const handleUpdatePassword = async () => {
     const isCurrentPasswordValid = validateCurrentPassword();
     const isNewPasswordValid = validateNewPassword();
     const isConfirmNewPasswordValid = validateConfirmNewPassword();
@@ -130,8 +129,51 @@ const AccountSecurity: React.FC = () => {
       isNewPasswordValid &&
       isConfirmNewPasswordValid
     ) {
-      // Perform update password logic here
-      alert("Password updated successfully!");
+      try {
+        // Retrieve userId and token from local storage
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+
+        if (!userId || !token) {
+          alert("User ID or token not found. Please log in again.");
+          return;
+        }
+
+        // Make the API call using fetch
+        const response = await fetch(
+          `${config.apiUrl}/v1/users/${userId}/change-password`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              oldPassword: currentPassword,
+              newPassword: newPassword,
+            }),
+          }
+        );
+
+        // Handle response
+        if (response.ok) {
+          const data = await response.json();
+          alert("Password updated successfully!");
+          // Reset the form
+          setCurrentPassword("");
+          setNewPassword("");
+          setConfirmNewPassword("");
+          setIsChangingPassword(false);
+        } else {
+          const errorData = await response.json();
+          const errorMessage =
+            errorData.message || "Failed to update password. Please try again.";
+          alert(errorMessage);
+        }
+      } catch (error) {
+        alert("An unexpected error occurred. Please try again.");
+        console.error("Error updating password:", error);
+      }
     }
   };
 
@@ -162,7 +204,7 @@ const AccountSecurity: React.FC = () => {
               <Lock className="h-[28px] w-[28px] text-[#A6B5BB]" />
               <div className="h-[28px] w-[1px] bg-[#A6B5BB]" />
               <Input
-                type="password"
+                type={showCurrentPassword ? "text" : "password"} // Toggle between text and password
                 placeholder="Current Password"
                 className={inputTextStyle}
                 onFocus={() => setCurrentPasswordFocus(true)}
@@ -173,6 +215,17 @@ const AccountSecurity: React.FC = () => {
                   validateCurrentPassword();
                 }}
               />
+              {/* Eye icon to toggle password visibility */}
+              <div
+                className="cursor-pointer"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+              >
+                {showCurrentPassword ? (
+                  <EyeOff className="h-[28px] w-[28px] text-[#A6B5BB]" />
+                ) : (
+                  <Eye className="h-[28px] w-[28px] text-[#A6B5BB]" />
+                )}
+              </div>
             </div>
             {currentPasswordError && (
               <div className="text-red-500 mt-4" style={{ marginTop: "16px" }}>
@@ -188,7 +241,7 @@ const AccountSecurity: React.FC = () => {
               <Lock className="h-[28px] w-[28px] text-[#A6B5BB]" />
               <div className="h-[28px] w-[1px] bg-[#A6B5BB]" />
               <Input
-                type="password"
+                type={showNewPassword ? "text" : "password"} // Toggle between text and password
                 placeholder="New Password"
                 className={inputTextStyle}
                 onFocus={() => setNewPasswordFocus(true)}
@@ -199,6 +252,17 @@ const AccountSecurity: React.FC = () => {
                   validateNewPassword();
                 }}
               />
+              {/* Eye icon to toggle password visibility */}
+              <div
+                className="cursor-pointer"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+              >
+                {showNewPassword ? (
+                  <EyeOff className="h-[28px] w-[28px] text-[#A6B5BB]" />
+                ) : (
+                  <Eye className="h-[28px] w-[28px] text-[#A6B5BB]" />
+                )}
+              </div>
             </div>
             {newPasswordError && (
               <div className="text-red-500 mt-4" style={{ marginTop: "16px" }}>
@@ -216,17 +280,28 @@ const AccountSecurity: React.FC = () => {
               <Lock className="h-[28px] w-[28px] text-[#A6B5BB]" />
               <div className="h-[28px] w-[1px] bg-[#A6B5BB]" />
               <Input
-                type="password"
-                placeholder="Update Password"
+                type={showConfirmPassword ? "text" : "password"} // Toggle between text and password
+                placeholder="Confirm New Password"
                 className={inputTextStyle}
                 onFocus={() => setUpdatePasswordFocus(true)}
                 onBlur={() => setUpdatePasswordFocus(false)}
                 value={confirmNewPassword}
                 onChange={(e) => {
                   setConfirmNewPassword(e.target.value);
-                  validateConfirmNewPassword();
+                  validateConfirmNewPassword(); // Call validation here
                 }}
               />
+              {/* Eye icon to toggle password visibility */}
+              <div
+                className="cursor-pointer"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-[28px] w-[28px] text-[#A6B5BB]" />
+                ) : (
+                  <Eye className="h-[28px] w-[28px] text-[#A6B5BB]" />
+                )}
+              </div>
             </div>
             {confirmNewPasswordError && (
               <div className="text-red-500 mt-4" style={{ marginTop: "16px" }}>
@@ -235,15 +310,16 @@ const AccountSecurity: React.FC = () => {
             )}
 
             <div className="flex items-center gap-[32px]">
-              {/* Update Button - Use the new 'xl' size variant */}
+              {/* Update Button */}
               <Button
                 size="xl"
                 className="bg-[#5F24E0] hover:bg-[#9F7CEC] text-[#EFE9FC] font-Archivo font-semibold text-[22px] text-center rounded-[24px] py-[24px] px-[64px]"
                 onClick={handleUpdatePassword}
+                disabled={!isFormValid} // Disable the button if the form is not valid
               >
                 Update
               </Button>
-              {/* Cancel Button - Removed Hover Underline and padding */}
+              {/* Cancel Button */}
               <Button
                 variant="link"
                 className="text-[#5F24E0] hover:text-[#9F7CEC] font-Archivo font-semibold text-[22px] !p-0 no-underline hover:no-underline"
@@ -259,19 +335,25 @@ const AccountSecurity: React.FC = () => {
           <SettingsSection>
             <div style={{ marginBottom: "32px" }}>
               <div style={labelStyle}>Email address</div>
-              <div style={valueStyle}>mahmoudelkholy@protu.com</div>
+              <div style={valueStyle}>{user ? `${user.email}` : ""}</div>
             </div>
 
             <div>
               <div style={labelStyle}>Protu password</div>
               <div className="flex items-center">
-                <div style={valueStyle}>You've set an Protu password&nbsp;</div>
-                <span
-                  className="font-Archivo font-semibold text-[22px] text-[#5F24E0] hover:text-[#9F7CEC] cursor-pointer text-center"
-                  onClick={toggleChangePassword}
-                >
-                  &nbsp;Change password
-                </span>
+                <div style={valueStyle}>
+                  {user
+                    ? `You've set an Protu password. `
+                    : "You are not signed in"}
+                </div>
+                {user ? (
+                  <span
+                    className="font-Archivo font-semibold text-[22px] text-[#5F24E0] hover:text-[#9F7CEC] cursor-pointer text-center"
+                    onClick={toggleChangePassword}
+                  >
+                    &nbsp;Change password
+                  </span>
+                ) : null}
               </div>
             </div>
           </SettingsSection>
