@@ -9,6 +9,7 @@ import { ForgotPassword } from "./pages/ForgotPassword/ForgotPassword";
 // import { ForgotPasswordStep3 } from './pages/ForgotPassword/ForgotPasswordStep3';
 // import { ForgotPasswordStep4 } from './pages/ForgotPassword/ForgotPasswordStep4';
 import { Settings } from "./pages/Settings";
+import { Courses } from "./pages/Courses";
 
 export default function App() {
   const handleSendMessage = (content: string) => {
@@ -34,6 +35,7 @@ export default function App() {
             </MainLayout>
           }
         />
+        <Route path="/courses" element={<Courses />} />
       </Routes>
     </div>
   );
