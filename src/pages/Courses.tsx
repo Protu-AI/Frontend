@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { MainLayout } from "@/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from "react-router-dom";
 
 export function Courses() {
   const { theme } = useTheme();
@@ -117,6 +118,16 @@ interface CoursePathProps {
 }
 
 function CoursePath({ title, description, coursesNumber }: CoursePathProps) {
+  // Function to generate URL-friendly slug
+  const slugify = (str: string) => {
+    return str
+      .toLowerCase()
+      .replace(/ /g, '-')
+      .replace(/[^\w-]+/g, '');
+  };
+
+  const pathSlug = slugify(title);
+
   return (
     <div className="rounded-[32px] bg-card shadow-[0px_2px_6px_rgba(0,0,0,0.1)] p-[32px] flex flex-col h-full">
       <div className="flex justify-between items-center">
@@ -132,10 +143,11 @@ function CoursePath({ title, description, coursesNumber }: CoursePathProps) {
         {description}
       </p>
       <div style={{ height: '32px' }}></div>
-      <button class="bg-[#5F24E0] text-[#EFE9FC] text-[22px] font-medium rounded-[16px] 
-px-12 py-3 self-start transition-all hover:bg-[#9F7CEC] active:bg-[#9F7CEC]">
-  Explore
-</button>
+      <Link to={`/path/${pathSlug}`}>
+        <button className="bg-[#5F24E0] text-[#EFE9FC] text-[22px] font-medium rounded-[16px] px-12 py-3 self-start transition-all hover:bg-[#9F7CEC] active:bg-[#9F7CEC]">
+          Explore
+        </button>
+      </Link>
     </div>
   );
 }

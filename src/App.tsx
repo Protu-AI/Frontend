@@ -10,6 +10,7 @@ import { ForgotPassword } from "./pages/ForgotPassword/ForgotPassword";
 // import { ForgotPasswordStep4 } from './pages/ForgotPassword/ForgotPasswordStep4';
 import { Settings } from "./pages/Settings";
 import { Courses } from "./pages/Courses";
+import CoursePathPage from "./pages/CoursePathPage";
 
 export default function App() {
   const handleSendMessage = (content: string) => {
@@ -36,6 +37,7 @@ export default function App() {
           }
         />
         <Route path="/courses" element={<Courses />} />
+        <Route path="/path/:pathName" element={<CoursePathPage />} />
       </Routes>
     </div>
   );
