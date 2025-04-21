@@ -9,8 +9,9 @@ import { ForgotPassword } from "./pages/ForgotPassword/ForgotPassword";
 // import { ForgotPasswordStep3 } from './pages/ForgotPassword/ForgotPasswordStep3';
 // import { ForgotPasswordStep4 } from './pages/ForgotPassword/ForgotPasswordStep4';
 import { Settings } from "./pages/Settings";
-import { Courses } from "./pages/Courses";
-import CoursePathPage from "./pages/CoursePathPage";
+import { Learn } from "./pages/Learn"; // Updated import
+import Path from "./pages/Path"; // Updated import
+import CoursePage from "./pages/CoursePage"; // Import the new CoursePage
 
 export default function App() {
   const handleSendMessage = (content: string) => {
@@ -36,8 +37,9 @@ export default function App() {
             </MainLayout>
           }
         />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/path/:pathName" element={<CoursePathPage />} />
+        <Route path="/learn" element={<Learn />} /> {/* Updated route path */}
+        <Route path="/path/:pathName" element={<Path />} /> {/* Updated element */}
+        <Route path="/course/:courseName" element={<CoursePage />} /> {/* New route */}
       </Routes>
     </div>
   );

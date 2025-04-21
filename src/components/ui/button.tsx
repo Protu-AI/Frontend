@@ -20,6 +20,10 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         explore:
           "bg-[#5F24E0] text-[#EFE9FC] text-[22px] font-semibold rounded-[16px] px-12 py-3 transition-all duration-200 hover:bg-[#9F7CEC] active:bg-[#3D1697]",
+        continue: // Continue button within lesson items
+          "bg-[#5F24E0] text-[#EFE9FC] font-['Archivo'] text-[22px] font-semibold rounded-[16px] p-[17px] transition-colors duration-200 hover:bg-[#FFBF00] hover:text-[#5F24E0]", // Corrected padding to p-[17px]
+        "primary-continue": // New continue button below description
+          "bg-[#EFE9FC] text-[#5F24E0] font-['Archivo'] text-[22px] font-semibold rounded-[16px] py-[12px] px-[48px] transition-colors duration-200 hover:bg-[#FFBF00]",
       },
       size: {
         default: "h-10 px-4 py-2",

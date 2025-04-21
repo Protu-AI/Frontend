@@ -11,7 +11,7 @@ export function MainNav({ className }: MainNavProps) {
   const routes = [
     { href: '/', label: 'Home' },
     { href: '/chatbot', label: 'Chatbot' },
-    { href: '/courses', label: 'Courses' },
+    { href: '/learn', label: 'Learn' }, // Updated label and href
     { href: '/progress', label: 'Progress' },
     { href: '/resources', label: 'Resources' },
     { href: '/community', label: 'Community' },

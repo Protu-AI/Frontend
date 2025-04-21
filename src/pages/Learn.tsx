@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from "react-router-dom";
 
-export function Courses() {
+export function Learn() {
   const { theme } = useTheme();
   return (
     <MainLayout>

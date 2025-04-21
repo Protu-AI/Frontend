@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom"; // Import Link
 import { MainLayout } from "@/layouts/MainLayout";
 import React, { useState, useEffect } from 'react';
 
@@ -11,7 +11,7 @@ interface Course {
   icon: string;
 }
 
-const CoursePathPage = () => {
+const Path = () => {
   const { pathName } = useParams();
   const [courses, setCourses] = useState<Course[]>([]);
 
@@ -84,51 +84,67 @@ const CoursePathPage = () => {
     fetchCourses();
   }, [pathName]);
 
-  const CourseItem = ({ course }: { course: Course }) => (
-    <div className="w-[1500px] rounded-[32px] shadow-[0_2px_6px_rgba(0,0,0,0.2)] mb-[64px] p-[32px]">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col items-start">
-          <div className="flex items-center flex-col items-start">
-            <div className="flex items-center">
-              <img
-                src={course.icon}
-                alt={`${course.title} Icon`}
-                className="w-[100px] h-[113px]"
-              />
-              <div className="ml-[32px] font-['Archivo'] text-[48px] font-semibold">
-                {course.title}
-                <div className="flex items-center mt-2">
-                  <img
-                    src="https://img.icons8.com/ios-filled/16/A6B5BB/book.png"
-                    alt="Book Icon"
-                    className="h-[16px]"
-                  />
-                  <span className="ml-2 font-['Archivo'] font-semibold text-[16px]" style={{ color: '#A6B5BB' }}>
-                    {course.lessons} Lessons
-                  </span>
-                  <img
-                    src="https://img.icons8.com/ios-filled/16/A6B5BB/timer.png"
-                    alt="Timer Icon"
-                    className="ml-4 h-[16px]"
-                  />
-                  <span className="ml-2 font-['Archivo'] font-semibold text-[16px]" style={{ color: '#A6B5BB' }}>{course.duration}</span>
+  // Function to generate URL-friendly slug for courses
+  const slugify = (str: string) => {
+    return str
+      .toLowerCase()
+      .replace(/ /g, '-')
+      .replace(/[^\w-]+/g, '');
+  };
+
+
+  const CourseItem = ({ course }: { course: Course }) => {
+    const courseSlug = slugify(course.title); // Generate slug for the course title
+
+    return (
+      <div className="w-[1500px] rounded-[32px] shadow-[0_2px_6px_rgba(0,0,0,0.2)] mb-[64px] p-[32px]">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col items-start">
+            <div className="flex items-center flex-col items-start">
+              <div className="flex items-center">
+                <img
+                  src={course.icon}
+                  alt={`${course.title} Icon`}
+                  className="w-[100px] h-[113px]"
+                />
+                <div className="ml-[32px] font-['Archivo'] text-[48px] font-semibold">
+                  {course.title}
+                  <div className="flex items-center mt-2">
+                    <img
+                      src="https://img.icons8.com/ios-filled/16/A6B5BB/book.png"
+                      alt="Book Icon"
+                      className="h-[16px]"
+                    />
+                    <span className="ml-2 font-['Archivo'] font-semibold text-[16px]" style={{ color: '#A6B5BB' }}>
+                      {course.lessons} Lessons
+                    </span>
+                    <img
+                      src="https://img.icons8.com/ios-filled/16/A6B5BB/timer.png"
+                      alt="Timer Icon"
+                      className="ml-4 h-[16px]"
+                    />
+                    <span className="ml-2 font-['Archivo'] font-semibold text-[16px]" style={{ color: '#A6B5BB' }}>{course.duration}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          {/* Wrap the button in a Link */}
+          <Link to={`/course/${courseSlug}`}>
+            <button className="bg-[#5F24E0] text-[#EFE9FC] rounded-[16px] px-[48px] py-[12px] ml-[32px] hover:bg-[#9F7CEC] font-['Archivo'] font-semibold text-[22px]">
+              Open Course
+            </button>
+          </Link>
         </div>
-        <button className="bg-[#5F24E0] text-[#EFE9FC] rounded-[16px] px-[48px] py-[12px] ml-[32px] hover:bg-[#9F7CEC] font-['Archivo'] font-semibold text-[22px]">
-          Open Course
-        </button>
+        <div className="mt-[28px]">
+          <div className="w-full h-[1px] bg-[#D6D6D6]"></div>
+        </div>
+        <div className="mt-[32px] font-['Archivo'] text-[24px]" style={{ color: '#ABABAB', textAlign: 'left' }}>
+          {course.description}
+        </div>
       </div>
-      <div className="mt-[28px]">
-        <div className="w-full h-[1px] bg-[#D6D6D6]"></div>
-      </div>
-      <div className="mt-[32px] font-['Archivo'] text-[24px]" style={{ color: '#ABABAB', textAlign: 'left' }}>
-        {course.description}
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <MainLayout>
@@ -155,4 +171,4 @@ const CoursePathPage = () => {
   );
 };
 
-export default CoursePathPage;
+export default Path;
