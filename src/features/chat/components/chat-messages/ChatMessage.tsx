@@ -28,7 +28,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
           isBot
             ? "max-w-[600px]"
             : cn(
-                "bg-[#EFE9FC] dark:bg-[#BFA7F3]/80 rounded-2xl px-3 py-[12px]",
+                "bg-white dark:bg-[#BFA7F3]/80 rounded-2xl p-[12px]", // Added bg-white and p-[12px]
                 "text-left max-w-[600px]"
               )
         )}

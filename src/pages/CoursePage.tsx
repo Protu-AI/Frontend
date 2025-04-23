@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; // Import useNavigate
 import { MainLayout } from "@/layouts/MainLayout";
 import React from 'react';
 import { cn } from "@/lib/utils"; // Import cn for conditional classes
@@ -49,6 +49,7 @@ const mockLessons = generateMockLessons();
 
 const CoursePage = () => {
   const { courseName } = useParams();
+  const navigate = useNavigate(); // Initialize useNavigate
 
   // Function to format the course name slug back to a readable title
   const formatCourseName = (courseName: string) => {
@@ -63,7 +64,8 @@ const CoursePage = () => {
 
   const handleLessonClick = (lesson: Lesson) => {
     console.log(`Lesson clicked: ${lesson.title}`);
-    // Implement navigation or other actions here later
+    // Navigate to the lesson page using the lesson ID
+    navigate(`/lesson/${lesson.id}`);
   };
 
   // Find the first not finished lesson
@@ -135,7 +137,14 @@ const CoursePage = () => {
                 className="bg-[#EFE9FC] text-[#5F24E0] font-['Archivo'] text-[22px] font-semibold rounded-[16px] py-[12px] px-[48px] transition-colors duration-200 hover:bg-[#FFBF00]"
                 onClick={() => {
                   // Handle continue action for the overall course
-                  console.log("Continue Course button clicked");
+                  // Find the first not finished lesson and navigate to it
+                  const firstNotFinished = mockLessons.find(lesson => !lesson.isFinished);
+                  if (firstNotFinished) {
+                    handleLessonClick(firstNotFinished);
+                  } else {
+                    console.log("All lessons finished!");
+                    // Optionally navigate to a completion page or first lesson
+                  }
                 }}
               >
                 Continue

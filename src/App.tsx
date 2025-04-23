@@ -9,9 +9,11 @@ import { ForgotPassword } from "./pages/ForgotPassword/ForgotPassword";
 // import { ForgotPasswordStep3 } from './pages/ForgotPassword/ForgotPasswordStep3';
 // import { ForgotPasswordStep4 } from './pages/ForgotPassword/ForgotPasswordStep4';
 import { Settings } from "./pages/Settings";
-import { Learn } from "./pages/Learn"; // Updated import
-import Path from "./pages/Path"; // Updated import
-import CoursePage from "./pages/CoursePage"; // Import the new CoursePage
+import { Learn } from "./pages/Learn";
+import Path from "./pages/Path";
+import CoursePage from "./pages/CoursePage";
+import LessonPage from "./pages/LessonPage";
+import { ChatProvider } from "./contexts/ChatContext"; // Import ChatProvider here
 
 export default function App() {
   const handleSendMessage = (content: string) => {
@@ -29,17 +31,30 @@ export default function App() {
         <Route path="/forgot-password/step3" element={<ForgotPasswordStep3 />} />
         <Route path="/forgot-password/step4" element={<ForgotPasswordStep4 />} /> */}
         <Route path="/settings/*" element={<Settings />} />
+
+        {/* Wrap routes that need ChatContext with ChatProvider */}
         <Route
           path="/chatbot"
           element={
-            <MainLayout>
-              <ChatLayout onSendMessage={handleSendMessage} />
-            </MainLayout>
+            <ChatProvider> {/* Wrap ChatLayout */}
+              <MainLayout>
+                <ChatLayout onSendMessage={handleSendMessage} />
+              </MainLayout>
+            </ChatProvider>
           }
         />
-        <Route path="/learn" element={<Learn />} /> {/* Updated route path */}
-        <Route path="/path/:pathName" element={<Path />} /> {/* Updated element */}
-        <Route path="/course/:courseName" element={<CoursePage />} /> {/* New route */}
+        <Route
+          path="/lesson/:lessonId"
+          element={
+            <ChatProvider> {/* Wrap LessonPage */}
+              <LessonPage />
+            </ChatProvider>
+          }
+        />
+
+        <Route path="/learn" element={<Learn />} />
+        <Route path="/path/:pathName" element={<Path />} />
+        <Route path="/course/:courseName" element={<CoursePage />} />
       </Routes>
     </div>
   );
