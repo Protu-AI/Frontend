@@ -10,7 +10,7 @@ import { ForgotPassword } from "./pages/ForgotPassword/ForgotPassword";
 // import { ForgotPasswordStep4 } from './pages/ForgotPassword/ForgotPasswordStep4';
 import { Settings } from "./pages/Settings";
 import { Learn } from "./pages/Learn";
-import Path from "./pages/Path";
+import { Path } from "./pages/Path";
 import CoursePage from "./pages/CoursePage";
 import LessonPage from "./pages/LessonPage";
 import { ChatProvider } from "./contexts/ChatContext"; // Import ChatProvider here
@@ -36,7 +36,9 @@ export default function App() {
         <Route
           path="/chatbot"
           element={
-            <ChatProvider> {/* Wrap ChatLayout */}
+            <ChatProvider>
+              {" "}
+              {/* Wrap ChatLayout */}
               <MainLayout>
                 <ChatLayout onSendMessage={handleSendMessage} />
               </MainLayout>
@@ -46,7 +48,9 @@ export default function App() {
         <Route
           path="/lesson/:lessonId"
           element={
-            <ChatProvider> {/* Wrap LessonPage */}
+            <ChatProvider>
+              {" "}
+              {/* Wrap LessonPage */}
               <LessonPage />
             </ChatProvider>
           }

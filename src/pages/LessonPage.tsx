@@ -1,29 +1,35 @@
 import { useParams } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
-import React, { useState } from 'react'; // Import useState
+import React, { useState } from "react"; // Import useState
 import { cn } from "@/lib/utils"; // Import cn for conditional classes
-import { MessageCircle, X } from 'lucide-react'; // Import chat icon and X icon
-import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { prism } from 'react-syntax-highlighter/dist/esm/styles/prism'; // Import a light mode style
+import { MessageCircle, X } from "lucide-react"; // Import chat icon and X icon
+import ReactMarkdown from "react-markdown"; // Import ReactMarkdown
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { prism } from "react-syntax-highlighter/dist/esm/styles/prism"; // Import a light mode style
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 import { LessonChatWindow } from "@/components/LessonChatWindow"; // Import the new component
-import { motion, AnimatePresence } from 'framer-motion'; // Import motion and AnimatePresence
+import { motion, AnimatePresence } from "framer-motion"; // Import motion and AnimatePresence
 
 // Custom components for react-markdown rendering
 const components = {
   h2: ({ node, ...props }) => (
-    <h2 className="font-['Archivo'] font-medium text-[32px] text-[#5F24E0] text-left mt-0 mb-[24px]" {...props} />
+    <h2
+      className="font-['Archivo'] font-medium text-[32px] text-[#5F24E0] text-left mt-0 mb-[24px]"
+      {...props}
+    />
   ),
   hr: ({ node, ...props }) => (
     <hr className="mt-0 mb-[24px] border-t border-[#D6D6D6]" {...props} />
   ),
   p: ({ node, ...props }) => (
-    <p className="font-['Archivo'] font-medium text-[16px] text-[#1C0B43] text-left leading-[1.2] mt-0 mb-[24px]" {...props} />
+    <p
+      className="font-['Archivo'] font-medium text-[16px] text-[#1C0B43] text-left leading-[1.2] mt-0 mb-[24px]"
+      {...props}
+    />
   ),
   code: ({ node, inline, className, children, ...props }) => {
-    const match = /language-(\w+)/.exec(className || '');
-    const codeContent = String(children).replace(/\n$/, '');
+    const match = /language-(\w+)/.exec(className || "");
+    const codeContent = String(children).replace(/\n$/, "");
     const { codeOutputs, handleRunCode } = React.useContext(LessonContext);
     const codeKey = codeContent;
 
@@ -31,13 +37,13 @@ const components = {
       return (
         <div className="bg-[#EFE9FC] rounded-[8px] p-[24px] mt-0 mb-[24px]">
           <SyntaxHighlighter
-  style={prism}
-  language={match[1]}
-  PreTag="div"
-  className="!bg-[#FFFFFF] border-l-[8px] border-[#5F24E0] px-[32px] py-[12px] !mt-0 !mb-[24px]"
->
-  {String(children).replace(/\n$/, '')}
-</SyntaxHighlighter>
+            style={prism}
+            language={match[1]}
+            PreTag="div"
+            className="!bg-[#FFFFFF] border-l-[8px] border-[#5F24E0] px-[32px] py-[12px] !mt-0 !mb-[24px]"
+          >
+            {String(children).replace(/\n$/, "")}
+          </SyntaxHighlighter>
 
           {codeOutputs[codeKey] && (
             <div className="bg-[#EFE9FC] rounded-[8px] mt-0 mb-[24px]">
@@ -62,7 +68,7 @@ const components = {
         </code>
       );
     }
-  }
+  },
 };
 
 // Create a context to pass codeOutputs and handleRunCode to the components renderer
@@ -70,7 +76,6 @@ const LessonContext = React.createContext({
   codeOutputs: {},
   handleRunCode: (key: string, code: string) => {},
 });
-
 
 const LessonPage = () => {
   const { lessonId } = useParams(); // Assuming we'll use lessonId in the future
@@ -82,7 +87,8 @@ const LessonPage = () => {
   const mockLesson = {
     id: lessonId,
     title: "HTML Styles", // Example title
-    description: "The HTML style attribute is used to add styles to an element, such as color, font, size, and more.", // Example description
+    description:
+      "The HTML style attribute is used to add styles to an element, such as color, font, size, and more.", // Example description
     content: `
 ## Introduction to HTML Styles
 
@@ -195,55 +201,80 @@ This concludes the basic introduction to HTML styles. Practice using these attri
     console.log("Running code:", code);
     // Simulate fetching output from backend
     setTimeout(() => {
-      const simulatedOutput = `Simulated output for:\n${code.substring(0, 50)}...`;
-      setCodeOutputs(prev => ({ ...prev, [key]: simulatedOutput }));
+      const simulatedOutput = `Simulated output for:\n${code.substring(
+        0,
+        50
+      )}...`;
+      setCodeOutputs((prev) => ({ ...prev, [key]: simulatedOutput }));
     }, 1000); // Simulate network delay
   };
 
   // Positions for the animated button relative to the viewport
-  const closedPosition = { right: '128px', top: '144px' }; // Position when chat is closed
-  const openPosition = { right: '160px', top: '96px' }; // Position when chat is open
+  const closedPosition = { right: "128px", top: "144px" }; // Position when chat is closed
+  const openPosition = { right: "160px", top: "96px" }; // Position when chat is open
 
   return (
     <MainLayout>
       {/* Main container: scrollable, top margin */}
-      <div className="flex justify-start w-full overflow-y-auto h-full mt-[64px]"> {/* Adjusted top margin and removed items-center */}
+      <div className="flex justify-start w-full overflow-y-auto h-full mt-[64px]">
+        {" "}
+        {/* Adjusted top margin and removed items-center */}
         {/* Content container with horizontal margins and dynamic width */}
-        <div className={cn("flex flex-col items-center w-full transition-all duration-300 ease-in-out pl-[128px]", isChatOpen ? "w-[calc(100%-592px)] pr-[32px]" : "w-full pr-[128px]")}> {/* Adjusted horizontal margins and added dynamic width */}
+        <div
+          className={cn(
+            "flex flex-col items-center w-full transition-all duration-300 ease-in-out pl-[128px]",
+            isChatOpen ? "w-[calc(100%-592px)] pr-[32px]" : "w-full pr-[128px]"
+          )}
+        >
+          {" "}
+          {/* Adjusted horizontal margins and added dynamic width */}
           {/* First Row */}
-          <div className="flex items-center justify-between w-full"> {/* Flex container for the first row, added w-full */}
+          <div className="flex items-center justify-between w-full">
+            {" "}
+            {/* Flex container for the first row, added w-full */}
             {/* Left side: Border, Title, and Description */}
-            <div className="flex items-start"> {/* Flex container for border and text */}
+            <div className="flex items-start">
+              {" "}
+              {/* Flex container for border and text */}
               {/* Border */}
-              <div className="w-[6px] h-[80px] bg-[#5F24E0] rounded-md shrink-0"></div> {/* Adjusted border height */}
+              <div className="w-[6px] h-[80px] bg-[#5F24E0] rounded-md shrink-0"></div>{" "}
+              {/* Adjusted border height */}
               {/* Spacing */}
               <div className="w-[8px] shrink-0"></div> {/* Added spacing */}
               {/* Title and Description */}
-              <div className="flex flex-col items-start"> {/* Flex column for texts */}
-                <h1 className="font-['Archivo'] text-[42px] font-semibold text-[#5F24E0] text-left mb-[8px]"> {/* Title style */}
+              <div className="flex flex-col items-start">
+                {" "}
+                {/* Flex column for texts */}
+                <h1 className="font-['Archivo'] text-[42px] font-semibold text-[#5F24E0] text-left mb-[8px]">
+                  {" "}
+                  {/* Title style */}
                   {mockLesson.title}
                 </h1>
-                <p className="font-['Archivo'] text-[18px] font-semibold text-[#A6B5BB] text-left"> {/* Description style */}
+                <p className="font-['Archivo'] text-[18px] font-semibold text-[#A6B5BB] text-left">
+                  {" "}
+                  {/* Description style */}
                   {mockLesson.description}
                 </p>
               </div>
             </div>
           </div>
-
           {/* Spacing after the first row */}
-          <div className="h-[64px] shrink-0"></div> {/* Added spacing and shrink-0 */}
-
+          <div className="h-[64px] shrink-0"></div>{" "}
+          {/* Added spacing and shrink-0 */}
           {/* Lesson Content Block */}
-          <div className="rounded-[32px] shadow-[0px_2px_6px_rgba(0,0,0,0.2)] p-[32px] bg-[#FFFFFF] w-full"> {/* Added styling and w-full */}
+          <div className="rounded-[32px] shadow-[0px_2px_6px_rgba(0,0,0,0.2)] p-[32px] bg-[#FFFFFF] w-full">
+            {" "}
+            {/* Added styling and w-full */}
             {/* Lesson content goes here */}
             <LessonContext.Provider value={{ codeOutputs, handleRunCode }}>
               <ReactMarkdown components={components}>
                 {mockLesson.content}
               </ReactMarkdown>
             </LessonContext.Provider>
-
             {/* End of Lesson Buttons */}
-            <div className="flex justify-between mt-[64px]"> {/* Added spacing above buttons */}
+            <div className="flex justify-between mt-[64px]">
+              {" "}
+              {/* Added spacing above buttons */}
               {/* View Course Button */}
               <button
                 className="font-['Archivo'] text-[18px] font-semibold text-center rounded-[16px] py-[16px] px-[18px] border-[3px] border-[#5F24E0] text-[#5F24E0] transition-colors duration-200 hover:bg-[#5F24E0] hover:text-[#EFE9FC]"
@@ -251,7 +282,6 @@ This concludes the basic introduction to HTML styles. Practice using these attri
               >
                 View Course
               </button>
-
               {/* Next Lesson Button */}
               <button
                 className="font-['Archivo'] text-[18px] font-semibold text-center rounded-[16px] py-[16px] px-[18px] border-[3px] border-[#5F24E0] text-[#EFE9FC] bg-[#5F24E0] transition-colors duration-200 hover:bg-[#9F7CEC]"
@@ -262,7 +292,6 @@ This concludes the basic introduction to HTML styles. Practice using these attri
             </div>
           </div>
         </div>
-
         {/* Chat Window */}
         <LessonChatWindow
           isOpen={isChatOpen}
@@ -275,15 +304,17 @@ This concludes the basic introduction to HTML styles. Practice using these attri
       <motion.button
         className={cn(
           "fixed z-50 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-200",
-          isChatOpen ? "bg-transparent text-[#5F24E0] dark:text-[#FFBF00] w-[20px] h-[20px]" : "bg-[#5F24E0] hover:bg-[#9F7CEC] w-[80px] h-[80px]"
+          isChatOpen
+            ? "bg-transparent text-[#5F24E0] dark:text-[#FFBF00] w-[20px] h-[20px]"
+            : "bg-[#5F24E0] hover:bg-[#9F7CEC] w-[80px] h-[80px]"
         )}
         initial={closedPosition}
         animate={isChatOpen ? openPosition : closedPosition}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         onClick={() => setIsChatOpen(!isChatOpen)}
         style={{
-           right: isChatOpen ? '160px' : '128px',
-           top: isChatOpen ? '96px' : '144px',
+          right: isChatOpen ? "160px" : "128px",
+          top: isChatOpen ? "96px" : "144px",
         }}
       >
         <AnimatePresence mode="wait">
@@ -307,7 +338,8 @@ This concludes the basic introduction to HTML styles. Practice using these attri
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.15 }}
             >
-              <MessageCircle className="w-[40px] h-[40px] text-[#FFBF00]" /> {/* Chat icon */}
+              <MessageCircle className="w-[40px] h-[40px] text-[#FFBF00]" />{" "}
+              {/* Chat icon */}
             </motion.div>
           )}
         </AnimatePresence>
