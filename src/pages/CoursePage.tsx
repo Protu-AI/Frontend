@@ -1,159 +1,196 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
-import React from 'react';
-import { cn } from "@/lib/utils"; // Import cn for conditional classes
-// Removed import for Button component
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { config } from "@/../config";
 
-// Define a type for a lesson
 interface Lesson {
-  id: string;
-  title: string;
-  isFinished: boolean;
+  id: number;
+  name: string;
+  lessonOrder: number;
+  content: string;
+  isFinished?: boolean;
 }
-
-// Generate mock lessons with meaningful names (7 finished, 11 not finished)
-const generateMockLessons = (): Lesson[] => {
-  const lessonTitles = [
-    "Introduction to Programming Concepts",
-    "Setting Up Your Development Environment",
-    "Understanding Variables and Data Types",
-    "Control Flow: Conditionals and Loops",
-    "Functions: Building Reusable Code",
-    "Introduction to Object-Oriented Programming",
-    "Working with Arrays and Collections",
-    "Error Handling and Debugging",
-    "File Input and Output",
-    "Introduction to Algorithms",
-    "Data Structures: Lists and Dictionaries",
-    "Version Control with Git",
-    "Introduction to Web Development",
-    "Building Simple User Interfaces",
-    "Working with APIs",
-    "Database Fundamentals",
-    "Testing Your Code",
-    "Deployment Basics",
-  ];
-
-  const lessons: Lesson[] = [];
-  for (let i = 0; i < lessonTitles.length; i++) {
-    lessons.push({
-      id: `lesson-${i + 1}`,
-      title: lessonTitles[i],
-      isFinished: i < 7, // First 7 are finished (index 0 to 6)
-    });
-  }
-  return lessons;
-};
-
-const mockLessons = generateMockLessons();
 
 const CoursePage = () => {
   const { courseName } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [lessons, setLessons] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [completionPercentage, setCompletionPercentage] = useState(0);
+  const course = location.state?.course;
 
-  // Function to format the course name slug back to a readable title
+  useEffect(() => {
+    if (!courseName) {
+      setError("No course specified");
+      setLoading(false);
+      return;
+    }
+
+    const fetchLessons = async () => {
+      try {
+        const response = await fetch(
+          `${config.apiUrl}/courses/${courseName}/lessons`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch lessons");
+        }
+
+        const data = await response.json();
+        let fetchedLessons = data.data || [];
+
+        fetchedLessons = fetchedLessons.sort(
+          (a: any, b: any) => a.lessonOrder - b.lessonOrder
+        );
+
+        const processedLessons = fetchedLessons.map(
+          (lesson: any, index: number) => ({
+            ...lesson,
+            isFinished: index < Math.floor(fetchedLessons.length * 0.3),
+          })
+        );
+
+        setLessons(processedLessons);
+
+        const finishedCount = processedLessons.filter(
+          (l: { isFinished: any }) => l.isFinished
+        ).length;
+        const totalCount = processedLessons.length;
+        setCompletionPercentage(
+          totalCount > 0 ? Math.floor((finishedCount / totalCount) * 100) : 0
+        );
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An error occurred while fetching lessons");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLessons();
+  }, [courseName]);
+
   const formatCourseName = (courseName: string) => {
     return courseName
-      .replace(/-/g, ' ')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .replace(/-/g, " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
-  const courseTitle = formatCourseName(courseName || '');
+  const courseTitle = formatCourseName(courseName || "");
 
   const handleLessonClick = (lesson: Lesson) => {
-    console.log(`Lesson clicked: ${lesson.title}`);
-    // Implement navigation or other actions here later
+    console.log(`Lesson clicked: ${lesson.name}`);
+    // You can implement navigation to lesson details here
   };
 
-  // Find the first not finished lesson
-  const nextNotFinishedLesson = mockLessons.find(lesson => !lesson.isFinished);
+  const nextNotFinishedLesson = lessons.find((lesson) => !lesson.isFinished);
 
-  // Calculate finished and total lessons
-  const finishedLessonsCount = mockLessons.filter(lesson => lesson.isFinished).length;
-  const totalLessonsCount = mockLessons.length;
-  const completionPercentage = totalLessonsCount > 0 ? Math.floor((finishedLessonsCount / totalLessonsCount) * 100) : 0;
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center w-full h-full">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#5F24E0]"></div>
+          <p className="mt-4 font-['Archivo'] text-[16px] text-[#5F24E0]">
+            Loading lessons for {courseTitle || "this course"}...
+          </p>
+        </div>
+      </MainLayout>
+    );
+  }
 
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center w-full h-full">
+          <p className="font-['Archivo'] text-[16px] text-red-500">{error}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="mt-4 bg-[#5F24E0] text-[#EFE9FC] font-['Archivo'] text-[22px] font-medium rounded-[16px] px-12 py-3 transition-all hover:bg-[#9F7CEC]"
+          >
+            Go Back
+          </button>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  const finishedLessonsCount = lessons.filter(
+    (lesson) => lesson.isFinished
+  ).length;
+  const totalLessonsCount = lessons.length;
 
   return (
     <MainLayout>
-      {/* Main container: scrollable, top margin */}
       <div className="flex flex-col items-center justify-start w-full overflow-y-auto h-full mt-[128px]">
-        {/* Content container with horizontal margins */}
         <div className="w-full px-[170px]">
           {/* First Rectangle */}
-          <div className="bg-[#5F24E0] rounded-[32px] p-[64px] flex flex-col"> {/* Changed to flex-col */}
-            {/* First Row */}
-            <div className="flex items-center"> {/* Added flex and items-center */}
-              {/* First Column: Icon */}
-              <div className="flex items-center mr-[32px]"> {/* Added mr-[32px] */}
+          <div className="bg-[#5F24E0] rounded-[32px] p-[64px] flex flex-col">
+            <div className="flex items-center">
+              <div className="flex items-center mr-[32px]">
                 <img
-                  src="https://img.icons8.com/ios-filled/100/EFE9FC/html-5.png" // Example icon, color changed to EFE9FC
+                  src="https://img.icons8.com/ios-filled/100/EFE9FC/html-5.png"
                   alt="Course Icon"
-                  className="w-[110px] h-auto" // Set width to 110px
+                  className="w-[110px] h-auto"
                 />
               </div>
 
-              {/* Second Column: Course Info */}
-              <div className="flex-1 flex flex-col justify-center"> {/* flex-1 to take remaining space */}
-                <span className="font-['Archivo'] text-[32px] font-normal text-[#EFE9FC] text-left mb-[16px]"> {/* Changed font-weight to normal, added mb-[16px], text-left */}
+              <div className="flex-1 flex flex-col justify-center">
+                <span className="font-['Archivo'] text-[32px] font-normal text-[#EFE9FC] text-left mb-[16px]">
                   Course
                 </span>
-                <h2 className="font-['Archivo'] text-[42px] font-semibold text-[#EFE9FC] text-left"> {/* Changed font-size to 42px */}
+                <h2 className="font-['Archivo'] text-[42px] font-semibold text-[#EFE9FC] text-left">
                   {courseTitle}
                 </h2>
               </div>
 
-              {/* Third Column: Lesson Count */}
-              <div className="flex items-center ml-[32px]"> {/* Added ml-[32px] */}
+              <div className="flex items-center ml-[32px]">
                 <img
-                  src="https://img.icons8.com/ios-filled/26/EFE9FC/open-book.png" // Changed to open book icon
+                  src="https://img.icons8.com/ios-filled/26/EFE9FC/open-book.png"
                   alt="Book Icon"
-                  className="w-[26px] h-auto mr-[8px]" // Set width to 26px, added mr-[8px]
+                  className="w-[26px] h-auto mr-[8px]"
                 />
-                <span className="font-['Archivo'] text-[22px] font-semibold text-[#EFE9FC]"> {/* Adjusted font-size and color */}
+                <span className="font-['Archivo'] text-[22px] font-semibold text-[#EFE9FC]">
                   {finishedLessonsCount}/{totalLessonsCount} Lessons
                 </span>
               </div>
             </div>
 
-            {/* Spacing below the first row */}
             <div className="h-[64px]"></div>
 
-            {/* Second Row: Description */}
-            <div className="w-[1000px] font-['Archivo'] text-[24px] font-normal text-[#EFE9FC] text-left"> {/* Set width, font, color, and alignment */}
-              Start your web development journey by mastering the fundamentals of HTML and CSS. Learn how to structure pages, apply styles, and create responsive layouts using Flexbox and Grid.
+            <div className="w-[1000px] font-['Archivo'] text-[24px] font-normal text-[#EFE9FC] text-left">
+              {course?.description || "No course description available"}
             </div>
 
-            {/* Spacing below the description */}
             <div className="h-[32px]"></div>
 
-            {/* Third Row: Continue Button */}
-            <div className="flex justify-start"> {/* Align button to the left */}
-              {/* Manually created Continue button for the first rectangle */}
+            <div className="flex justify-start">
               <button
                 className="bg-[#EFE9FC] text-[#5F24E0] font-['Archivo'] text-[22px] font-semibold rounded-[16px] py-[12px] px-[48px] transition-colors duration-200 hover:bg-[#FFBF00]"
                 onClick={() => {
-                  // Handle continue action for the overall course
-                  console.log("Continue Course button clicked");
+                  if (nextNotFinishedLesson) {
+                    handleLessonClick(nextNotFinishedLesson);
+                  }
                 }}
               >
                 Continue
               </button>
             </div>
 
-            {/* Spacing below the first rectangle button */}
             <div className="h-[32px]"></div>
 
-            {/* Progress Bar and Percentage */}
             <div className="flex items-center w-full">
-              {/* Progress Bar Container */}
               <div className="flex-1 relative">
-                 {/* Percentage Text */}
                 <div className="absolute right-0 bottom-[calc(100%+8px)] font-['Archivo'] text-[32px] font-semibold text-[#EFE9FC]">
                   {completionPercentage}%
                 </div>
-                {/* Progress Bar */}
                 <div className="w-full h-[11px] rounded-[9px] bg-[#EFE9FC] overflow-hidden">
                   <div
                     className="h-full bg-[#FFBF00] transition-all duration-500 ease-in-out"
@@ -165,54 +202,52 @@ const CoursePage = () => {
           </div>
 
           {/* Second Rectangle */}
-          <div className="mt-[64px] rounded-[32px] shadow-[0px_2px_6px_rgba(0,0,0,0.2)] p-[32px] bg-[#FFFFFF]"> {/* Added bg-[#FFFFFF] */}
-            {/* Course Title */}
+          <div className="mt-[64px] rounded-[32px] shadow-[0px_2px_6px_rgba(0,0,0,0.2)] p-[32px] bg-[#FFFFFF]">
             <h2 className="font-['Archivo'] text-[32px] font-semibold text-[#5F24E0] text-left mb-[32px]">
               {courseTitle}
             </h2>
 
-            {/* Lessons List */}
-            <div className="space-y-[16px]"> {/* Spacing between lessons */}
-              {mockLessons.map(lesson => (
+            <div className="space-y-[16px]">
+              {lessons.map((lesson) => (
                 <div
                   key={lesson.id}
                   className={cn(
                     "flex items-center rounded-[12px] cursor-pointer transition-colors duration-200",
-                    lesson.isFinished ? "bg-[#FFFFFF] hover:bg-[#EFE9FC]" : "bg-[#FFFFFF] hover:bg-[#EFE9FC]", // Base background white, hover #EFE9FC
-                    nextNotFinishedLesson && lesson.id === nextNotFinishedLesson.id
-                      ? "bg-[#EFE9FC] hover:bg-[#EAE1FE] py-[7px] px-[32px]" // Next not finished: #EFE9FC background, different hover, 7px top/bottom, 32px left/right padding
-                      : "py-[24px] px-[32px]" // Other lessons: 24px top/bottom, 32px left/right padding
+                    lesson.isFinished
+                      ? "bg-[#FFFFFF] hover:bg-[#EFE9FC]"
+                      : "bg-[#FFFFFF] hover:bg-[#EFE9FC]",
+                    nextNotFinishedLesson &&
+                      lesson.id === nextNotFinishedLesson.id
+                      ? "bg-[#EFE9FC] hover:bg-[#EAE1FE] py-[7px] px-[32px]"
+                      : "py-[24px] px-[32px]"
                   )}
                   onClick={() => handleLessonClick(lesson)}
                 >
-                  {/* Lesson Status Circle */}
                   <div
                     className={cn(
                       "w-[14px] h-[14px] rounded-full shrink-0",
                       lesson.isFinished
-                        ? "bg-[#5F24E0]" // Finished: solid color
-                        : "bg-white border border-[#5F24E0]" // Not finished: white with border
+                        ? "bg-[#5F24E0]"
+                        : "bg-white border border-[#5F24E0]"
                     )}
                   ></div>
 
-                  {/* Lesson Title */}
                   <span className="ml-[16px] font-['Archivo'] text-[24px] font-semibold text-[#1C0B43] text-left">
-                    {lesson.title}
+                    {lesson.lessonOrder}. {lesson.name}
                   </span>
 
-                  {/* Continue Button for the next not finished lesson */}
-                  {nextNotFinishedLesson && lesson.id === nextNotFinishedLesson.id && (
-                    // Manually created Continue button for lesson item
-                    <button
-                      className="ml-auto bg-[#5F24E0] text-[#EFE9FC] font-['Archivo'] text-[22px] font-semibold rounded-[16px] p-[17px] transition-colors duration-200 hover:bg-[#FFBF00] hover:text-[#5F24E0]" // Corrected padding to p-[17px]
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent lesson click when button is clicked
-                        handleLessonClick(lesson); // Handle continue action
-                      }}
-                    >
-                      Continue
-                    </button>
-                  )}
+                  {nextNotFinishedLesson &&
+                    lesson.id === nextNotFinishedLesson.id && (
+                      <button
+                        className="ml-auto bg-[#5F24E0] text-[#EFE9FC] font-['Archivo'] text-[22px] font-semibold rounded-[16px] p-[17px] transition-colors duration-200 hover:bg-[#FFBF00] hover:text-[#5F24E0]"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLessonClick(lesson);
+                        }}
+                      >
+                        Continue
+                      </button>
+                    )}
                 </div>
               ))}
             </div>

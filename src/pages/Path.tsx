@@ -1,100 +1,69 @@
-import { useParams, Link } from "react-router-dom"; // Import Link
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { config } from "@/../config";
 
 interface Course {
-  id: string;
-  title: string;
+  id: number;
+  name: string;
   description: string;
-  lessons: number;
-  duration: string;
-  icon: string;
+  lessons: any[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-const Path = () => {
+export function Path() {
   const { pathName } = useParams();
-  const [courses, setCourses] = useState<Course[]>([]);
-
-  const formatPathName = (pathName: string) => {
-    return pathName
-      .replace(/-/g, ' ')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
-  const coursePathTitle = formatPathName(pathName || '').toUpperCase();
+  const navigate = useNavigate();
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [trackName, setTrackName] = useState("");
 
   useEffect(() => {
-    // Replace this with actual API call
+    if (!pathName) {
+      setError("No track specified");
+      setLoading(false);
+      return;
+    }
+
+    const originalName = pathName.replace(/-/g, " ");
+    setTrackName(originalName);
+
     const fetchCourses = async () => {
       try {
-        // const response = await fetch(`/api/courses?path=${pathName}`);
-        // const data = await response.json();
-        // setCourses(data);
-        // Mock data for now
-        const mockCourses: Course[] = [
-          {
-            id: "3",
-            title: "React for Beginners",
-            description: "Dive into React and learn how to build user interfaces with components.",
-            lessons: 15,
-            duration: "10 hours",
-            icon: "https://img.icons8.com/ios-filled/100/5F24E0/html-5.png",
-          },
-          {
-            id: "1",
-            title: "HTML & CSS for Beginners",
-            description: "Start your web development journey by mastering the fundamentals of HTML and CSS. Learn how to structure pages, apply styles, and create responsive layouts using Flexbox and Grid.",
-            lessons: 12,
-            duration: "8 hours",
-            icon: "https://img.icons8.com/ios-filled/100/5F24E0/html-5.png",
-          },
-          {
-            id: "2",
-            title: "JavaScript for Beginners",
-            description: "Learn the fundamentals of JavaScript. Understand variables, loops, functions, and more.",
-            lessons: 10,
-            duration: "6 hours",
-            icon: "https://img.icons8.com/ios-filled/100/5F24E0/html-5.png",
-          },
-          {
-            id: "4",
-            title: "Node.js for Beginners",
-            description: "Explore the world of backend development with Node.js.",
-            lessons: 8,
-            duration: "5 hours",
-            icon: "https://img.icons8.com/ios-filled/100/5F24E0/html-5.png",
-          },
-          {
-            id: "5",
-            title: "Python for Beginners",
-            description: "Get started with Python and learn the basics of programming.",
-            lessons: 12,
-            duration: "7 hours",
-            icon: "https://img.icons8.com/ios-filled/100/5F24E0/html-5.png",
-          },
-        ];
-        setCourses(mockCourses);
-      } catch (error) {
-        console.error("Failed to fetch courses:", error);
+        const response = await fetch(
+          `${config.apiUrl}/tracks/${originalName}/courses`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch courses");
+        }
+
+        const data = await response.json();
+        setCourses(data.data || []);
+      } catch (err) {
+        setError(err.message || "An error occurred while fetching courses");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchCourses();
   }, [pathName]);
 
-  // Function to generate URL-friendly slug for courses
   const slugify = (str: string) => {
-    return str
-      .toLowerCase()
-      .replace(/ /g, '-')
-      .replace(/[^\w-]+/g, '');
+    return str;
+    // .toLowerCase()
+    // .replace(/ /g, "-")
+    // .replace(/[^\w-]+/g, "");
   };
 
-
   const CourseItem = ({ course }: { course: Course }) => {
-    const courseSlug = slugify(course.title); // Generate slug for the course title
+    const courseSlug = slugify(course.name);
+    const lessonsCount = course.lessons?.length || 0;
+    const durationHours = Math.ceil(lessonsCount * 0.5); // Assuming 30min per lesson
 
     return (
       <div className="w-[1500px] rounded-[32px] shadow-[0_2px_6px_rgba(0,0,0,0.2)] mb-[64px] p-[32px]">
@@ -103,34 +72,41 @@ const Path = () => {
             <div className="flex items-center flex-col items-start">
               <div className="flex items-center">
                 <img
-                  src={course.icon}
-                  alt={`${course.title} Icon`}
+                  src="https://img.icons8.com/ios-filled/100/5F24E0/html-5.png"
+                  alt={`${course.name} Icon`}
                   className="w-[100px] h-[113px]"
                 />
                 <div className="ml-[32px] font-['Archivo'] text-[48px] font-semibold">
-                  {course.title}
+                  {course.name}
                   <div className="flex items-center mt-2">
                     <img
                       src="https://img.icons8.com/ios-filled/16/A6B5BB/book.png"
                       alt="Book Icon"
                       className="h-[16px]"
                     />
-                    <span className="ml-2 font-['Archivo'] font-semibold text-[16px]" style={{ color: '#A6B5BB' }}>
-                      {course.lessons} Lessons
+                    <span
+                      className="ml-2 font-['Archivo'] font-semibold text-[16px]"
+                      style={{ color: "#A6B5BB" }}
+                    >
+                      {lessonsCount} Lessons
                     </span>
                     <img
                       src="https://img.icons8.com/ios-filled/16/A6B5BB/timer.png"
                       alt="Timer Icon"
                       className="ml-4 h-[16px]"
                     />
-                    <span className="ml-2 font-['Archivo'] font-semibold text-[16px]" style={{ color: '#A6B5BB' }}>{course.duration}</span>
+                    <span
+                      className="ml-2 font-['Archivo'] font-semibold text-[16px]"
+                      style={{ color: "#A6B5BB" }}
+                    >
+                      {durationHours} hours
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          {/* Wrap the button in a Link */}
-          <Link to={`/course/${courseSlug}`}>
+          <Link to={`/course/${courseSlug}`} state={{ course }}>
             <button className="bg-[#5F24E0] text-[#EFE9FC] rounded-[16px] px-[48px] py-[12px] ml-[32px] hover:bg-[#9F7CEC] font-['Archivo'] font-semibold text-[22px]">
               Open Course
             </button>
@@ -139,12 +115,44 @@ const Path = () => {
         <div className="mt-[28px]">
           <div className="w-full h-[1px] bg-[#D6D6D6]"></div>
         </div>
-        <div className="mt-[32px] font-['Archivo'] text-[24px]" style={{ color: '#ABABAB', textAlign: 'left' }}>
-          {course.description}
+        <div
+          className="mt-[32px] font-['Archivo'] text-[24px]"
+          style={{ color: "#ABABAB", textAlign: "left" }}
+        >
+          {course.description || "No description available"}
         </div>
       </div>
     );
   };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center w-full h-full">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#5F24E0]"></div>
+          <p className="mt-4 font-['Archivo'] text-[16px] text-[#5F24E0]">
+            Loading courses for {trackName || "this track"}...
+          </p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center w-full h-full">
+          <p className="font-['Archivo'] text-[16px] text-red-500">{error}</p>
+          <Button
+            onClick={() => navigate(-1)}
+            className="mt-4 bg-[#5F24E0] text-[#EFE9FC]"
+          >
+            Go Back
+          </Button>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -152,7 +160,7 @@ const Path = () => {
         <h1 className="font-['Archivo'] text-[36px] font-semibold text-center text-[#0E1117] dark:text-[#EFE9FC] mt-[128px]">
           COURSES IN{" "}
           <span className="text-[#5F24E0] dark:text-[#BFA7F3]">
-            {coursePathTitle}
+            {trackName}
           </span>
         </h1>
         <p className="font-['Archivo'] text-[16px] text-center text-[#ABABAB] mt-[16px]">
@@ -162,13 +170,19 @@ const Path = () => {
 
         {/* Courses */}
         <div className="flex flex-col items-center w-full">
-          {courses.map(course => (
-            <CourseItem key={course.id} course={course} />
-          ))}
+          {courses.length > 0 ? (
+            courses.map((course) => (
+              <CourseItem key={course.id} course={course} />
+            ))
+          ) : (
+            <div className="w-[1500px] rounded-[32px] shadow-[0_2px_6px_rgba(0,0,0,0.2)] mb-[64px] p-[32px] text-center">
+              <p className="font-['Archivo'] text-[24px] text-[#ABABAB]">
+                No courses available for this track yet
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </MainLayout>
   );
-};
-
-export default Path;
+}
