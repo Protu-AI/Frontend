@@ -4,7 +4,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AnimationProvider } from "./contexts/AnimationContext";
 import { AuthProvider } from "./contexts/AuthContext";
-import { ChatProvider } from "./contexts/ChatContext";
+// import { ChatProvider } from "./contexts/ChatContext"; // Remove ChatProvider from here
 import App from "./App";
 import "./index.css";
 
@@ -19,9 +19,8 @@ createRoot(document.getElementById("root")!).render(
       <Router>
         <AuthProvider>
           <AnimationProvider>
-            <ChatProvider>
-              <App />
-            </ChatProvider>
+            {/* ChatProvider is now moved to App.tsx */}
+            <App />
           </AnimationProvider>
         </AuthProvider>
       </Router>

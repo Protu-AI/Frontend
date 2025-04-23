@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+=======
+import { useParams, useNavigate } from "react-router-dom"; // Import useNavigate
+>>>>>>> e038d1e93672a538aa26232c4c6932b755529615
 import { MainLayout } from "@/layouts/MainLayout";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -14,6 +18,7 @@ interface Lesson {
 
 const CoursePage = () => {
   const { courseName } = useParams();
+<<<<<<< HEAD
   const location = useLocation();
   const navigate = useNavigate();
   const [lessons, setLessons] = useState<any[]>([]);
@@ -75,6 +80,9 @@ const CoursePage = () => {
 
     fetchLessons();
   }, [courseName]);
+=======
+  const navigate = useNavigate(); // Initialize useNavigate
+>>>>>>> e038d1e93672a538aa26232c4c6932b755529615
 
   const formatCourseName = (courseName: string) => {
     return courseName
@@ -87,8 +95,14 @@ const CoursePage = () => {
   const courseTitle = formatCourseName(courseName || "");
 
   const handleLessonClick = (lesson: Lesson) => {
+<<<<<<< HEAD
     console.log(`Lesson clicked: ${lesson.name}`);
     // You can implement navigation to lesson details here
+=======
+    console.log(`Lesson clicked: ${lesson.title}`);
+    // Navigate to the lesson page using the lesson ID
+    navigate(`/lesson/${lesson.id}`);
+>>>>>>> e038d1e93672a538aa26232c4c6932b755529615
   };
 
   const nextNotFinishedLesson = lessons.find((lesson) => !lesson.isFinished);
