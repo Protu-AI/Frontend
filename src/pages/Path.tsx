@@ -34,7 +34,7 @@ export function Path() {
     const fetchCourses = async () => {
       try {
         const response = await fetch(
-          `${config.apiUrl}/tracks/${originalName}/courses`
+          `${config.apiUrl}/v1/tracks/${originalName}/courses`
         );
 
         if (!response.ok) {
@@ -53,15 +53,8 @@ export function Path() {
     fetchCourses();
   }, [pathName]);
 
-  const slugify = (str: string) => {
-    return str;
-    // .toLowerCase()
-    // .replace(/ /g, "-")
-    // .replace(/[^\w-]+/g, "");
-  };
-
   const CourseItem = ({ course }: { course: Course }) => {
-    const courseSlug = slugify(course.name);
+    const courseName = course.name;
     const lessonsCount = course.lessons?.length || 0;
     const durationHours = Math.ceil(lessonsCount * 0.5); // Assuming 30min per lesson
 
@@ -106,7 +99,7 @@ export function Path() {
               </div>
             </div>
           </div>
-          <Link to={`/course/${courseSlug}`} state={{ course }}>
+          <Link to={`/course/${courseName}`} state={{ course }}>
             <button className="bg-[#5F24E0] text-[#EFE9FC] rounded-[16px] px-[48px] py-[12px] ml-[32px] hover:bg-[#9F7CEC] font-['Archivo'] font-semibold text-[22px]">
               Open Course
             </button>

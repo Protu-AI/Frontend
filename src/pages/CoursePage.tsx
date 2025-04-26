@@ -2,6 +2,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import { config } from "@/../config";
 
 interface Lesson {
@@ -13,6 +14,7 @@ interface Lesson {
 }
 
 const CoursePage = () => {
+  const { user } = useAuth();
   const { courseName } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -31,34 +33,67 @@ const CoursePage = () => {
 
     const fetchLessons = async () => {
       try {
-        const response = await fetch(
-          `${config.apiUrl}/courses/${courseName}/lessons`
-        );
+        let response;
+        let fetchedLessons: any[] = [];
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch lessons");
+        if (user) {
+          // Authenticated request with progress
+          const token = localStorage.getItem("token");
+          response = await fetch(
+            `${config.apiUrl}/v1/courses/${courseName}/lessons/progress`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch lessons with progress");
+          }
+          const data = await response.json();
+          fetchedLessons = data.data || [];
+
+          // Map the response to match our Lesson interface
+          fetchedLessons = fetchedLessons.map((lesson) => ({
+            id: lesson.id,
+            name: lesson.name,
+            lessonOrder: lesson.lessonOrder,
+            content: "", // This will be empty since the progress endpoint doesn't return content
+            isFinished: lesson.isCompleted,
+          }));
+        } else {
+          // Unauthenticated request (original behavior)
+          response = await fetch(
+            `${config.apiUrl}/v1/courses/${courseName}/lessons`
+          );
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch lessons");
+          }
+
+          const data = await response.json();
+          fetchedLessons = data.data || [];
+
+          // Original processing for unauthenticated users
+          fetchedLessons = fetchedLessons.map((lesson: any, index: number) => ({
+            ...lesson,
+            isFinished: index < Math.floor(fetchedLessons.length * 0.3),
+          }));
         }
 
-        const data = await response.json();
-        let fetchedLessons = data.data || [];
-
+        // Common processing for both cases
         fetchedLessons = fetchedLessons.sort(
           (a: any, b: any) => a.lessonOrder - b.lessonOrder
         );
 
-        const processedLessons = fetchedLessons.map(
-          (lesson: any, index: number) => ({
-            ...lesson,
-            isFinished: index < Math.floor(fetchedLessons.length * 0.3),
-          })
-        );
+        setLessons(fetchedLessons);
 
-        setLessons(processedLessons);
-
-        const finishedCount = processedLessons.filter(
+        const finishedCount = fetchedLessons.filter(
           (l: { isFinished: any }) => l.isFinished
         ).length;
-        const totalCount = processedLessons.length;
+        const totalCount = fetchedLessons.length;
         setCompletionPercentage(
           totalCount > 0 ? Math.floor((finishedCount / totalCount) * 100) : 0
         );
@@ -87,8 +122,13 @@ const CoursePage = () => {
   const courseTitle = formatCourseName(courseName || "");
 
   const handleLessonClick = (lesson: Lesson) => {
-    console.log(`Lesson clicked: ${lesson.name}`);
-    // You can implement navigation to lesson details here
+    // In CoursePage.tsx
+    navigate(`/lesson/${lesson.name}`, {
+      state: {
+        lessons: lessons,
+        courseName: courseName,
+      },
+    });
   };
 
   const nextNotFinishedLesson = lessons.find((lesson) => !lesson.isFinished);

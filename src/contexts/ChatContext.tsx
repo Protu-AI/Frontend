@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState } from "react";
 import { config } from "../../config";
 import { ChatSession } from "../features/chat/types";
 
+const ChatUrl = "http://localhost:8082/api";
+
 interface ChatContextType {
   sessions: ChatSession[];
   currentSessionId: string | undefined;

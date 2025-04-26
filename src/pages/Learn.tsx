@@ -15,7 +15,7 @@ export function Learn() {
   useEffect(() => {
     const fetchTracks = async () => {
       try {
-        const response = await fetch(`${config.apiUrl}/tracks`);
+        const response = await fetch(`${config.apiUrl}/v1/tracks`);
         if (!response.ok) {
           throw new Error("Failed to fetch tracks");
         }
