@@ -65,14 +65,11 @@ export function Learn() {
   }
 
   // Group tracks by category
-  const frontendTracks = tracks.filter((track) =>
-    track.name.includes("Frontend")
+  const webTracks = tracks.filter(
+    (track) => track.name.includes("Frontend") || track.name.includes("Backend")
   );
   const aiDataTracks = tracks.filter(
     (track) => track.name.includes("AI") || track.name.includes("Data")
-  );
-  const backendTracks = tracks.filter((track) =>
-    track.name.includes("Backend")
   );
   const mobileTracks = tracks.filter((track) => track.name.includes("Mobile"));
   const cyberSecurityTracks = tracks.filter((track) =>
@@ -93,27 +90,15 @@ export function Learn() {
           Choose a category and start your learning journey today
         </p>
 
-        {frontendTracks.length > 0 && (
+        {webTracks.length > 0 && (
           <div className="w-full mt-[64px]">
-            <CourseCategory
-              title="Frontend Development"
-              tracks={frontendTracks}
-            />
+            <CourseCategory title="Web Development" tracks={webTracks} />
           </div>
         )}
 
         {aiDataTracks.length > 0 && (
           <div className="w-full mt-[79.5px]">
             <CourseCategory title="AI & Data" tracks={aiDataTracks} />
-          </div>
-        )}
-
-        {backendTracks.length > 0 && (
-          <div className="w-full mt-[79.5px]">
-            <CourseCategory
-              title="Backend Development"
-              tracks={backendTracks}
-            />
           </div>
         )}
 
