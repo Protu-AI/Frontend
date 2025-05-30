@@ -13,6 +13,7 @@ import { Learn } from "./pages/Learn";
 import { Path } from "./pages/Path";
 import CoursePage from "./pages/CoursePage";
 import LessonPage from "./pages/LessonPage";
+import { Quizzes } from "./pages/Quizzes";
 import { ChatProvider } from "./contexts/ChatContext"; // Import ChatProvider here
 
 export default function App() {
@@ -57,6 +58,7 @@ export default function App() {
         />
 
         <Route path="/learn" element={<Learn />} />
+        <Route path="/quizzes" element={<Quizzes />} />
         <Route path="/path/:pathName" element={<Path />} />
         <Route path="/course/:courseName" element={<CoursePage />} />
       </Routes>
