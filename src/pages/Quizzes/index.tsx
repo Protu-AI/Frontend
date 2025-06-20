@@ -3,6 +3,9 @@ import { QuizDashboard } from "./QuizDashboard";
 import { QuizHistory } from "./QuizHistory";
 import { config } from "../../../config";
 
+// Export the QuizGenerator for easy importing
+export { QuizGenerator } from "./QuizGenerator";
+
 export function Quizzes() {
   const [hasPastQuizzes, setHasPastQuizzes] = useState<boolean | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

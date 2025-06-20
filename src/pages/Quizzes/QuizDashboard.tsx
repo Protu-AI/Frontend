@@ -1,6 +1,9 @@
 import { MainLayout } from "@/layouts/MainLayout";
+import { useNavigate } from "react-router-dom";
 
 export function QuizDashboard() {
+  const navigate = useNavigate();
+
   return (
     <MainLayout>
       <div className="flex flex-col w-full overflow-y-auto h-full pt-[64px] px-[128px]">
@@ -139,6 +142,7 @@ export function QuizDashboard() {
         {/* Generate New Quiz Button */}
         <div className="flex justify-center">
           <button 
+            onClick={() => navigate('/quizzes/generate')}
             className="text-[#EFE9FC] font-['Archivo'] text-[28px] font-semibold rounded-[24px] py-[24px] px-[64px] transition-all duration-200 flex items-center gap-[16px] group hover:shadow-[inset_0px_0px_9px_#FFFFFF,_0px_6px_38px_#FFBF0036,_0_0_0_3px_#FFBF0080]"
             style={{
               background: 'radial-gradient(circle, #BFA7F3 0%, #5F24E0 100%)',
