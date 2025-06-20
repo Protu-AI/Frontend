@@ -18,10 +18,6 @@ import { QuizGenerator } from "./pages/Quizzes/QuizGenerator";
 import { ChatProvider } from "./contexts/ChatContext"; // Import ChatProvider here
 
 export default function App() {
-  const handleSendMessage = (content: string) => {
-    console.log("Sending message:", content);
-  };
-
   return (
     <div className="bg-light dark:bg-dark text-light dark:text-dark min-h-screen">
       <Routes>
@@ -42,7 +38,7 @@ export default function App() {
               {" "}
               {/* Wrap ChatLayout */}
               <MainLayout>
-                <ChatLayout onSendMessage={handleSendMessage} />
+                <ChatLayout />
               </MainLayout>
             </ChatProvider>
           }
