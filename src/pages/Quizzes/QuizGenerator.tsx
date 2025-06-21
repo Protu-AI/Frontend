@@ -1,6 +1,6 @@
 import { MainLayout } from "@/layouts/MainLayout";
 import { useState } from "react";
-import { config } from "../../../config"; // Adjust the path as per your project structure
+import { config } from "../../../config";
 
 export function QuizGenerator() {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -19,34 +19,30 @@ export function QuizGenerator() {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [quizId, setQuizId] = useState<string | null>(null); // New state for quiz ID
+  const [additionalPrefs, setAdditionalPrefs] = useState(""); // New state for additional preferences
+
   // New state for tags functionality
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTagInput, setCustomTagInput] = useState("");
   const [customTags, setCustomTags] = useState<string[]>([]);
 
-  // Mock suggested tags for testing (replace with actual API data)
-  const suggestedTags = [
-    { id: "1", text: "Fundamentals" },
-    { id: "2", text: "Advanced Concepts" },
-    { id: "3", text: "Practical Applications" },
-    { id: "4", text: "Case Studies" },
-    { id: "5", text: "Best Practices" },
-  ];
-
   const handleTagToggle = (tagText: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tagText) 
-        ? prev.filter(tag => tag !== tagText)
+    setSelectedTags((prev) =>
+      prev.includes(tagText)
+        ? prev.filter((tag) => tag !== tagText)
         : [...prev, tagText]
     );
   };
 
   const handleAddCustomTag = () => {
-    if (customTagInput.trim().length >= 3 && !customTags.includes(customTagInput.trim())) {
+    if (
+      customTagInput.trim().length >= 3 &&
+      !customTags.includes(customTagInput.trim())
+    ) {
       const newTag = customTagInput.trim();
-      setCustomTags(prev => [...prev, newTag]);
-      setSelectedTags(prev => [...prev, newTag]);
+      setCustomTags((prev) => [...prev, newTag]);
+      setSelectedTags((prev) => [...prev, newTag]);
       setCustomTagInput("");
     }
   };
@@ -99,10 +95,61 @@ export function QuizGenerator() {
       const responseData = await response.json();
       console.log("Quiz creation successful:", responseData);
       setSubtopicSuggestions(responseData.data.subtopicSuggestions);
-      // You might want to navigate to the next step or a new page here
-      setCurrentStep(2); // Example: move to the next step
+      setQuizId(responseData.data.id); // Save the quiz ID
+      setCurrentStep(2); // Move to the next step
     } catch (err) {
       console.error("Error creating quiz:", err);
+      setError((err as Error).message || "An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGenerateStage2 = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setError("Authorization token not found. Please log in.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!quizId) {
+      setError("Quiz ID is missing. Please go back to step 1.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Prepare the request body for stage2
+    const requestBody = {
+      quizID: quizId,
+      subtopics: selectedTags,
+      additionalPrefs: additionalPrefs,
+    };
+
+    try {
+      const response = await fetch(`${config.apiUrl}/v1/quizzes/stage2`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to generate quiz.");
+      }
+
+      const responseData = await response.json();
+      console.log("Quiz stage2 generated successfully:", responseData);
+      setCurrentStep(3); // Move to review step
+    } catch (err) {
+      console.error("Error generating quiz:", err);
       setError((err as Error).message || "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
@@ -379,7 +426,9 @@ export function QuizGenerator() {
                   <div className="ml-[16px] flex-1">
                     <h3
                       className={`font-['Archivo'] text-[28px] font-normal text-left mb-[8px] ${
-                        difficulty === "easy" ? "text-[#5F24E0]" : "text-[#1C0B43]"
+                        difficulty === "easy"
+                          ? "text-[#5F24E0]"
+                          : "text-[#1C0B43]"
                       }`}
                     >
                       Easy
@@ -517,7 +566,9 @@ export function QuizGenerator() {
                   <div className="ml-[16px] flex-1">
                     <h3
                       className={`font-['Archivo'] text-[28px] font-normal text-left mb-[8px] ${
-                        difficulty === "hard" ? "text-[#5F24E0]" : "text-[#1C0B43]"
+                        difficulty === "hard"
+                          ? "text-[#5F24E0]"
+                          : "text-[#1C0B43]"
                       }`}
                     >
                       Hard
@@ -597,7 +648,9 @@ export function QuizGenerator() {
                       {numberOfQuestions}
                     </span>
                     <button
-                      onClick={() => setNumberOfQuestions(numberOfQuestions + 1)}
+                      onClick={() =>
+                        setNumberOfQuestions(numberOfQuestions + 1)
+                      }
                       className="text-[#1C0B43] font-bold text-xl"
                     >
                       +
@@ -765,9 +818,13 @@ export function QuizGenerator() {
               {/* Static input with Edit button */}
               <div className="relative">
                 <div className="w-full bg-[#EFE9FC40] border-2 border-[#A6B5BB] rounded-[12px] p-[32px] font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] min-h-[calc(1.5em + 64px)] flex items-center pr-[120px]">
-                  {prompt || "Be specific about the topic, difficulty level, and any special focus areas. The more detailed your prompt, the better the AI-generated quiz will be."}
+                  {prompt ||
+                    "Be specific about the topic, difficulty level, and any special focus areas. The more detailed your prompt, the better the AI-generated quiz will be."}
                 </div>
-                <button className="absolute right-[32px] top-1/2 transform -translate-y-1/2 bg-[#D6D6D6] rounded-[8px] py-[8px] px-[16px] font-['Archivo'] text-[22px] font-normal text-[#1C0B43]">
+                <button
+                  onClick={() => setCurrentStep(1)}
+                  className="absolute right-[32px] top-1/2 transform -translate-y-1/2 bg-[#D6D6D6] rounded-[8px] py-[8px] px-[16px] font-['Archivo'] text-[22px] font-normal text-[#1C0B43]"
+                >
                   Edit
                 </button>
               </div>
@@ -796,7 +853,7 @@ export function QuizGenerator() {
               {/* Tags section */}
               <div className="flex flex-wrap gap-[16px]">
                 {/* Suggested tags */}
-                {suggestedTags.map((tag) => (
+                {subtopicSuggestions.map((tag) => (
                   <button
                     key={tag.id}
                     onClick={() => handleTagToggle(tag.text)}
@@ -809,7 +866,7 @@ export function QuizGenerator() {
                     {tag.text}
                   </button>
                 ))}
-                
+
                 {/* Custom tags */}
                 {customTags.map((tag, index) => (
                   <button
@@ -836,7 +893,7 @@ export function QuizGenerator() {
                   value={customTagInput}
                   onChange={(e) => setCustomTagInput(e.target.value)}
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter' && isAddButtonActive) {
+                    if (e.key === "Enter" && isAddButtonActive) {
                       handleAddCustomTag();
                     }
                   }}
@@ -920,6 +977,8 @@ export function QuizGenerator() {
               {/* Additional preferences input */}
               <input
                 type="text"
+                value={additionalPrefs}
+                onChange={(e) => setAdditionalPrefs(e.target.value)}
                 className="w-full bg-[#EFE9FC40] border-2 border-[#A6B5BB] rounded-[12px] py-[16px] px-[32px] font-['Archivo'] text-[22px] font-normal text-[#1C0B43] placeholder-[#A6B5BB] focus:border-[#5F24E0] focus:outline-none"
                 style={{
                   caretColor: "#1C0B43",
@@ -932,35 +991,80 @@ export function QuizGenerator() {
 
               {/* Generate button */}
               <div className="flex justify-center">
-                <button 
-                  className="text-[#EFE9FC] font-['Archivo'] text-[28px] font-semibold rounded-[24px] py-[24px] px-[64px] transition-all duration-200 flex items-center gap-[16px] group hover:shadow-[inset_0px_0px_9px_#FFFFFF,_0px_6px_38px_#FFBF0036,_0_0_0_3px_#FFBF0080]"
+                <button
+                  onClick={handleGenerateStage2}
+                  disabled={isLoading}
+                  className={`text-[#EFE9FC] font-['Archivo'] text-[28px] font-semibold rounded-[24px] py-[24px] px-[64px] transition-all duration-200 flex items-center gap-[16px] group hover:shadow-[inset_0px_0px_9px_#FFFFFF,_0px_6px_38px_#FFBF0036,_0_0_0_3px_#FFBF0080] ${
+                    isLoading ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
                   style={{
-                    background: 'radial-gradient(circle, #BFA7F3 0%, #5F24E0 100%)',
-                    boxShadow: 'inset 0px 0px 9px #FFFFFF, 0px 42px 38px #BFA7F336'
+                    background:
+                      "radial-gradient(circle, #BFA7F3 0%, #5F24E0 100%)",
+                    boxShadow:
+                      "inset 0px 0px 9px #FFFFFF, 0px 42px 38px #BFA7F336",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = 'inset 0px 0px 9px #FFFFFF, 0px 6px 38px #FFBF0036, 0 0 0 3px #FFBF0080';
+                    if (!isLoading) {
+                      e.currentTarget.style.boxShadow =
+                        "inset 0px 0px 9px #FFFFFF, 0px 6px 38px #FFBF0036, 0 0 0 3px #FFBF0080";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = 'inset 0px 0px 9px #FFFFFF, 0px 42px 38px #BFA7F336';
+                    e.currentTarget.style.boxShadow =
+                      "inset 0px 0px 9px #FFFFFF, 0px 42px 38px #BFA7F336";
                   }}
                 >
-                  <svg 
-                    width="45" 
-                    height="45" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
+                  <svg
+                    width="45"
+                    height="45"
+                    viewBox="0 0 24 24"
+                    fill="none"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="text-[#EFE9FC] group-hover:text-[#FFBF00] transition-colors duration-200"
+                    className={`transition-colors duration-200 ${
+                      isLoading
+                        ? "text-[#EFE9FC]"
+                        : "group-hover:text-[#FFBF00] text-[#EFE9FC]"
+                    }`}
                     strokeWidth="2"
                   >
-                    <path d="M12 5V19" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M5 12H19" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path
+                      d="M12 5V19"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M5 12H19"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
-                  Generate
+                  {isLoading ? "Generating..." : "Generate"}
                 </button>
               </div>
             </>
+          )}
+
+          {/* Step 3 Content */}
+          {currentStep === 3 && (
+            <div className="flex flex-col items-center justify-center h-full">
+              <h2 className="font-['Archivo'] text-[48px] font-semibold text-[#5F24E0] text-center mb-8">
+                Quiz Generated Successfully!
+              </h2>
+              <p className="font-['Archivo'] text-[28px] font-normal text-[#1C0B43] text-center max-w-2xl mb-16">
+                Your quiz has been created and is ready to use. You can now
+                review, share, or start taking the quiz.
+              </p>
+              <div className="flex gap-8">
+                <button className="bg-[#5F24E0] text-[#EFE9FC] font-['Archivo'] text-[22px] font-semibold rounded-[24px] py-[16px] px-[48px] transition-all duration-200 hover:bg-[#9F7CEC]">
+                  Review Quiz
+                </button>
+                <button className="bg-[#52D999] text-[#1C0B43] font-['Archivo'] text-[22px] font-semibold rounded-[24px] py-[16px] px-[48px] transition-all duration-200 hover:bg-[#9FF7C6]">
+                  Start Quiz
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Continue button (only for Step 1) */}
@@ -968,12 +1072,7 @@ export function QuizGenerator() {
             <div className="flex justify-center">
               <button
                 onClick={() => {
-                  // Temporarily just move to step 2 for UI testing
-                  if (currentStep === 1) {
-                    setCurrentStep(2);
-                  } else {
-                    handleSubmit();
-                  }
+                  handleSubmit();
                 }}
                 disabled={isLoading}
                 className={`font-['Archivo'] text-[22px] font-semibold rounded-[24px] py-[27px] px-[134px] transition-all duration-200 ${
@@ -994,24 +1093,6 @@ export function QuizGenerator() {
         {/* 38px spacing under the block */}
         <div className="mb-[38px]" />
       </div>
-      {/* This is where you can access subtopicSuggestions for the next stage */}
-      {subtopicSuggestions.length > 0 && (
-        <div className="mt-10">
-          <h2 className="font-['Archivo'] text-[32px] font-semibold text-[#1C0B43] text-left">
-            Suggested Subtopics for Stage 2:
-          </h2>
-          <ul className="list-disc list-inside">
-            {subtopicSuggestions.map((subtopic) => (
-              <li
-                key={subtopic.id}
-                className="font-['Archivo'] text-[20px] text-[#A6B5BB]"
-              >
-                {subtopic.text}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </MainLayout>
   );
 }
