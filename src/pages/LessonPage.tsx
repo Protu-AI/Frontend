@@ -173,7 +173,7 @@ const LessonPage = () => {
     };
 
     fetchLesson();
-  }, [lessonId, courseLessons]);
+  }, [lessonId]);
 
   const markLessonCompleted = async () => {
     try {
