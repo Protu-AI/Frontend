@@ -13,7 +13,7 @@ import { useChat } from "@/contexts/ChatContext";
 import { useToast } from "@/hooks/use-toast";
 import { useClickOutside } from "@/shared/hooks/useClickOutside";
 import { Input } from "@/components/ui/input";
-import { config } from "../../../../../config"; // Adjust path if necessary
+import { config } from "../../../../../config";
 
 interface ChatListItemProps {
   session: ChatSession;
@@ -31,17 +31,8 @@ export function ChatListItem({
   const [newChatName, setNewChatName] = useState(session.title);
   const { deleteSession } = useChat();
   const { toast } = useToast();
-  // We'll use a single ref for the main item container now
   const itemContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const handleMoreOptionsClick = useCallback(
-    (e: React.MouseEvent<SVGElement>) => {
-      e.stopPropagation();
-      setIsMenuOpen((prev) => !prev);
-    },
-    []
-  );
 
   const handleDeleteClick = useCallback(async () => {
     setIsMenuOpen(false);
@@ -62,7 +53,7 @@ export function ChatListItem({
 
   const handleEditClick = useCallback(() => {
     setIsEditing(true);
-    setIsMenuOpen(false); // Close dropdown
+    setIsMenuOpen(false);
     setNewChatName(session.title); // Initialize input with current title
   }, [session.title]);
 
@@ -70,7 +61,7 @@ export function ChatListItem({
     const trimmedName = newChatName.trim();
     if (trimmedName === "" || trimmedName === session.title) {
       setIsEditing(false);
-      setNewChatName(session.title); // Revert if no change or empty
+      setNewChatName(session.title);
       return;
     }
 
@@ -102,6 +93,8 @@ export function ChatListItem({
       if (!response.ok) {
         throw new Error(data.error || "Failed to update chat name.");
       }
+      setNewChatName(data.data.name);
+      session.title = data.data.name;
 
       toast({
         title: "Success",
@@ -115,7 +108,7 @@ export function ChatListItem({
         variant: "destructive",
       });
       setIsEditing(false); // Exit editing mode even on error for now, can be changed
-      setNewChatName(session.title); // Revert on error
+      setNewChatName(session.title);
     }
   }, [newChatName, session, toast]);
 
@@ -173,12 +166,11 @@ export function ChatListItem({
         'group relative w-full rounded-[7px] px-3 py-2.5 font-["Archivo"] text-xl font-normal text-[#808080] dark:text-[#EFE9FC] transition-all duration-200 flex items-center justify-between',
         isActive && "bg-[#EBEBEB] dark:bg-[#EBEBEB] dark:text-[#808080]",
         !isEditing &&
-          "cursor-pointer hover:bg-[#EBEBEB] dark:hover:bg-[#EBEBEB] dark:hover:text-[#808080]" // Make clickable only when not editing
+          "cursor-pointer hover:bg-[#EBEBEB] dark:hover:bg-[#EBEBEB] dark:hover:text-[#808080]"
       )}
-      onClick={handleSelectChat} // Handle chat selection here
+      onClick={handleSelectChat}
     >
       {isEditing ? (
-        // Input field when editing
         <Input
           ref={inputRef}
           value={newChatName}
@@ -207,7 +199,7 @@ export function ChatListItem({
               variant="ghost"
               size="icon"
               className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[#808080] dark:text-[#EFE9FC] hover:bg-transparent dark:hover:bg-transparent"
-              onClick={(e) => e.stopPropagation()} // Stop propagation to prevent selecting chat
+              onClick={(e) => e.stopPropagation()}
             >
               <MoreHorizontal className="h-5 w-5" />
             </Button>

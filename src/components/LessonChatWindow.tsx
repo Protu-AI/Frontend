@@ -189,7 +189,6 @@ export function LessonChatWindow({
               onSendMessage={handleSendMessage}
               isExpanded={isTyping}
               className="w-full"
-              allowFileUpload={true}
             />
           </div>
         </motion.div>
