@@ -202,6 +202,47 @@ export function QuizHistory() {
     }
   };
 
+  // Delete a draft quiz
+  const handleDeleteDraft = async (quizId: string, quizTitle: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+
+      // Confirmation dialog before deleting (replace with custom modal if needed)
+      if (!window.confirm(`Are you sure you want to delete "${quizTitle}"?`)) {
+        return;
+      }
+
+      const response = await fetch(`${config.apiUrl}/v1/quizzes/${quizId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: quizTitle }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete draft quiz.");
+      }
+
+      const data = await response.json();
+      console.log("Delete successful:", data.message);
+      // Optionally, refresh the draft quizzes list or remove the deleted quiz from state
+      setDraftQuizzes((prevDrafts) =>
+        prevDrafts.filter((draft) => draft.id !== quizId)
+      );
+      // You might also want to refetch the summary data if it's affected
+      fetchSummary();
+    } catch (err: any) {
+      console.error("Error deleting draft quiz:", err.message);
+      setError(`Error deleting quiz: ${err.message}`); // Set a user-friendly error message
+    }
+  };
+
   useEffect(() => {
     const loadInitialData = async () => {
       setLoading(true);
@@ -312,7 +353,7 @@ export function QuizHistory() {
 
           {/* Generate New Quiz Button */}
           <button
-            onClick={() => navigate('/quizzes/generate')}
+            onClick={() => navigate("/quizzes/generate")}
             className="text-[#EFE9FC] font-['Archivo'] text-[28px] font-semibold rounded-[24px] py-[24px] px-[64px] transition-all duration-200 flex items-center gap-[16px] group hover:shadow-[inset_0px_0px_9px_#FFFFFF,_0px_6px_38px_#FFBF0036,_0_0_0_3px_#FFBF0080]"
             style={{
               background: "radial-gradient(circle, #BFA7F3 0%, #5F24E0 100%)",
@@ -1028,7 +1069,12 @@ export function QuizHistory() {
                         </button>
 
                         {/* Delete Button */}
-                        <button className="p-[12px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group">
+                        <button
+                          onClick={() =>
+                            handleDeleteDraft(draft.id, draft.title)
+                          }
+                          className="p-[12px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group"
+                        >
                           <svg
                             width="22"
                             height="22"
