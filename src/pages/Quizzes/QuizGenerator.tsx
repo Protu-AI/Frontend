@@ -466,6 +466,146 @@ const PlusIcon = () => (
   </svg>
 );
 
+const MenuIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M3 6H21"
+      stroke="#1C0B43"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M3 12H21"
+      stroke="#1C0B43"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M3 18H21"
+      stroke="#1C0B43"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const SaveIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16L21 8V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21Z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M7 3V9H15"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M7 21V13H17V21"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const PencilIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M16 4L20 8L8 20L4 20L4 16L16 4Z"
+      stroke="#A6B5BB"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+// Quiz Title Editor Component
+const QuizTitleEditor = () => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState("JavaScript Fundamentals for Web Development");
+
+  const handleSave = () => {
+    setIsEditing(false);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-[32px] px-[128px] py-[32px] flex items-center justify-center gap-[16px] relative shadow-[0px_2px_6px_#00000014] w-[1000px]">
+      {isEditing ? (
+        <>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={handleSave}
+            onKeyPress={handleKeyPress}
+            className="font-['Archivo'] text-[28px] font-medium text-[#1C0B43] text-center bg-transparent outline-none border-none"
+            style={{ width: `${title.length + 2}ch` }}
+            autoFocus
+          />
+          <div className="w-[20px] flex-shrink-0 ml-[16px]" />
+        </>
+      ) : (
+        <>
+          <span className="font-['Archivo'] text-[28px] font-medium text-[#1C0B43] text-center">
+            {title}
+          </span>
+          <button
+            onClick={() => setIsEditing(true)}
+            className="flex items-center justify-center flex-shrink-0 w-[20px] ml-[16px]"
+          >
+            <PencilIcon />
+          </button>
+        </>
+      )}
+    </div>
+  );
+};
+
+// Quiz Tag Component
+const QuizTag = ({ icon, text }: { icon: React.ReactNode; text: string }) => (
+  <div className="bg-[#EFE9FC] rounded-[16px] px-[32px] py-[8px] flex items-center gap-[8px]">
+    {icon}
+    <span className="font-['Archivo'] text-[24px] font-medium text-[#1C0B43]">
+      {text}
+    </span>
+  </div>
+);
+
 export function QuizGenerator() {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">(
@@ -517,6 +657,8 @@ export function QuizGenerator() {
     setIsLoading(true);
     setError(null);
 
+    // TODO: Re-enable API integration when UI work is complete
+    /*
     const token = localStorage.getItem("token");
     if (!token) {
       setError("Authorization token not found. Please log in.");
@@ -560,12 +702,33 @@ export function QuizGenerator() {
     } finally {
       setIsLoading(false);
     }
+    */
+
+    // Temporary UI-only mode - simulate API response
+    setTimeout(() => {
+      // Mock subtopic suggestions for step 2
+      setSubtopicSuggestions([
+        { id: "1", text: "Variables and Data Types" },
+        { id: "2", text: "Functions and Scope" },
+        { id: "3", text: "DOM Manipulation" },
+        { id: "4", text: "Event Handling" },
+        { id: "5", text: "Asynchronous Programming" },
+        { id: "6", text: "ES6+ Features" },
+        { id: "7", text: "Error Handling" },
+        { id: "8", text: "Browser APIs" },
+      ]);
+      setQuizId("mock-quiz-id");
+      setCurrentStep(2);
+      setIsLoading(false);
+    }, 1000); // Simulate network delay
   };
 
   const handleGenerateStage2 = async () => {
     setIsLoading(true);
     setError(null);
 
+    // TODO: Re-enable API integration when UI work is complete
+    /*
     const token = localStorage.getItem("token");
     if (!token) {
       setError("Authorization token not found. Please log in.");
@@ -605,6 +768,13 @@ export function QuizGenerator() {
     } finally {
       setIsLoading(false);
     }
+    */
+
+    // Temporary UI-only mode - simulate API response
+    setTimeout(() => {
+      setCurrentStep(3);
+      setIsLoading(false);
+    }, 1000); // Simulate network delay
   };
 
   const getStepText = () => {
@@ -622,26 +792,124 @@ export function QuizGenerator() {
 
   return (
     <MainLayout>
-      <div className="flex flex-col w-full overflow-y-auto h-full px-[128px]">
-        <div className="pt-[32px]" />
-        <h1 className="font-['Archivo'] text-[64px] font-semibold text-[#5F24E0] text-left">
-          Create Your Quiz
-        </h1>
-        <div className="mb-[16px]" />
+      {currentStep === 3 ? (
+        // Step 3: Show content directly on page background without container
+        <div className="flex flex-col w-full overflow-y-auto h-full px-[128px] items-center justify-center">
+          {/* Modern check mark icon in colored box */}
+          <div className="w-[72px] h-[72px] bg-[#52D999] rounded-[24px] flex items-center justify-center">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="flex-shrink-0"
+            >
+                              <path
+                  d="M20 6L9 17L4 12"
+                  stroke="white"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+            </svg>
+          </div>
 
-        <StepIndicator currentStep={currentStep} />
+          {/* 32px spacing */}
+          <div className="mb-[32px]" />
 
-        <div className="mb-[16px]" />
-        <p className="font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] text-left">
-          {getStepText()}
-        </p>
-        <div className="mb-[32px]" />
+          {/* Main title */}
+          <h2 className="font-['Archivo'] text-[48px] font-semibold text-[#5F24E0] text-center">
+            Your Quiz Is Ready
+          </h2>
 
-        <div
-          className="bg-[#FFFFFF] rounded-[32px] flex-1 p-[32px]"
-          style={{ boxShadow: "0px 2px 6px #00000014" }}
-        >
-          {currentStep === 1 && (
+          {/* 16px spacing */}
+          <div className="mb-[16px]" />
+
+          {/* Subtitle */}
+          <p className="font-['Archivo'] text-[16px] font-normal text-[#A6B5BB] text-center">
+            Final Step: Review and Start
+          </p>
+
+          {/* 16px spacing */}
+          <div className="mb-[16px]" />
+
+          {/* Three progress lines - all filled */}
+          <div className="flex items-center gap-[18px]">
+            {[1, 2, 3].map((step) => (
+              <div
+                key={step}
+                className="w-[44px] h-[5px] rounded-full bg-[#5F24E0]"
+              />
+            ))}
+          </div>
+
+          {/* 64px spacing */}
+          <div className="mb-[64px]" />
+
+          {/* Quiz title rectangle with edit functionality */}
+          <QuizTitleEditor />
+
+          {/* 32px spacing */}
+          <div className="mb-[32px]" />
+
+          {/* 3 tags with icons */}
+          <div className="flex items-center gap-[24px]">
+            <QuizTag icon={<ClockIcon />} text="20:00" />
+            <QuizTag icon={<DocumentIcon />} text="CSS" />
+            <QuizTag icon={<MenuIcon />} text="18 Questions" />
+          </div>
+
+          {/* 64px spacing */}
+          <div className="mb-[64px]" />
+
+          {/* Start button */}
+          <button className="bg-[#5F24E0] hover:bg-[#9F7CEC] text-[#EFE9FC] font-['Archivo'] text-[22px] font-semibold rounded-[24px] py-[27px] px-[125px] transition-all duration-200">
+            Start
+          </button>
+
+          {/* 24px spacing */}
+          <div className="mb-[24px]" />
+
+          {/* OR with lines */}
+          <div className="w-full flex items-center max-w-[300px]">
+            <div className="flex-1 h-[1px] bg-[#A6B5BB]" />
+            <span className="mx-[7px] font-['Archivo'] text-[16px] font-normal text-[#A6B5BB]">
+              OR
+            </span>
+            <div className="flex-1 h-[1px] bg-[#A6B5BB]" />
+          </div>
+
+          {/* 24px spacing */}
+          <div className="mb-[24px]" />
+
+          {/* Save to drafts */}
+          <button className="flex items-center gap-[8px] text-[#5F24E0] hover:text-[#9F7CEC] transition-colors duration-200">
+            <SaveIcon />
+            <span className="font-['Archivo'] text-[16px] font-semibold">
+              Save to drafts
+            </span>
+          </button>
+        </div>
+      ) : (
+        // Steps 1 and 2: Show with header and white container
+        <div className="flex flex-col w-full overflow-y-auto h-full px-[128px]">
+          <div className="pt-[32px]" />
+          <h1 className="font-['Archivo'] text-[64px] font-semibold text-[#5F24E0] text-left">
+            Create Your Quiz
+          </h1>
+          <div className="mb-[16px]" />
+
+          <StepIndicator currentStep={currentStep} />
+
+          <div className="mb-[16px]" />
+          <p className="font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] text-left">
+            {getStepText()}
+          </p>
+          <div className="mb-[32px]" />
+
+          <div className="bg-[#FFFFFF] rounded-[32px] flex-1 p-[32px] shadow-[0px_2px_6px_#00000014]">
+            {currentStep === 1 && (
             <>
               <FormHeader
                 icon={<OctopusIcon />}
@@ -893,25 +1161,7 @@ export function QuizGenerator() {
             </>
           )}
 
-          {currentStep === 3 && (
-            <div className="flex flex-col items-center justify-center h-full">
-              <h2 className="font-['Archivo'] text-[48px] font-semibold text-[#5F24E0] text-center mb-8">
-                Quiz Generated Successfully!
-              </h2>
-              <p className="font-['Archivo'] text-[28px] font-normal text-[#1C0B43] text-center max-w-2xl mb-16">
-                Your quiz has been created and is ready to use. You can now
-                review, share, or start taking the quiz.
-              </p>
-              <div className="flex gap-8">
-                <button className="bg-[#5F24E0] text-[#EFE9FC] font-['Archivo'] text-[22px] font-semibold rounded-[24px] py-[16px] px-[48px] transition-all duration-200 hover:bg-[#9F7CEC]">
-                  Review Quiz
-                </button>
-                <button className="bg-[#52D999] text-[#1C0B43] font-['Archivo'] text-[22px] font-semibold rounded-[24px] py-[16px] px-[48px] transition-all duration-200 hover:bg-[#9FF7C6]">
-                  Start Quiz
-                </button>
-              </div>
-            </div>
-          )}
+
 
           {currentStep === 1 && (
             <div className="flex justify-center mt-8">
@@ -932,9 +1182,10 @@ export function QuizGenerator() {
           {error && (
             <div className="text-red-500 text-center mt-4">{error}</div>
           )}
+          </div>
+          <div className="mb-[38px]" />
         </div>
-        <div className="mb-[38px]" />
-      </div>
+      )}
     </MainLayout>
   );
 }

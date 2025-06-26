@@ -19,7 +19,7 @@ import { ChatProvider } from "./contexts/ChatContext"; // Import ChatProvider he
 
 export default function App() {
   return (
-    <div className="bg-light dark:bg-dark text-light dark:text-dark min-h-screen">
+    <div className="min-h-screen">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
