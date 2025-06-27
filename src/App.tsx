@@ -15,6 +15,7 @@ import CoursePage from "./pages/CoursePage";
 import LessonPage from "./pages/LessonPage";
 import { Quizzes } from "./pages/Quizzes";
 import { QuizGenerator } from "./pages/Quizzes/QuizGenerator";
+import { QuizPage } from "./pages/Quizzes/QuizPage";
 import { ChatProvider } from "./contexts/ChatContext"; // Import ChatProvider here
 
 export default function App() {
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/learn" element={<Learn />} />
         <Route path="/quizzes" element={<Quizzes />} />
         <Route path="/quizzes/generate" element={<QuizGenerator />} />
+        <Route path="/quizzes/take/:quizId" element={<QuizPage />} />
         <Route path="/path/:pathName" element={<Path />} />
         <Route path="/course/:courseName" element={<CoursePage />} />
       </Routes>

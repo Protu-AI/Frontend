@@ -1,5 +1,5 @@
 import { MainLayout } from "@/layouts/MainLayout";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { config } from "../../../config";
 
@@ -550,160 +550,52 @@ const PencilIcon = () => (
 );
 
 // Quiz Title Editor Component
-interface QuizTitleEditorProps {
-  initialTitle: string;
-  quizId: string;
-  onTitleUpdated: (newTitle: string) => void; // Callback to update parent state
-}
-
-const QuizTitleEditor: React.FC<QuizTitleEditorProps> = ({
-  initialTitle,
-  quizId,
-  onTitleUpdated,
-}) => {
+const QuizTitleEditor = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState(initialTitle);
-  const [originalTitle, setOriginalTitle] = useState(initialTitle); // Store original for cancel
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [title, setTitle] = useState("JavaScript Fundamentals for Web Development");
 
-  // Update internal state if initialTitle prop changes (e.g., when quizData loads)
-  useEffect(() => {
-    setTitle(initialTitle);
-    setOriginalTitle(initialTitle);
-  }, [initialTitle]);
-
-  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value);
-  };
-
-  const handleEditClick = () => {
-    setIsEditing(true);
-    setError(null); // Clear any previous errors when starting to edit
-  };
-
-  const handleCancelEdit = () => {
-    setTitle(originalTitle); // Revert to the title before editing started
+  const handleSave = () => {
     setIsEditing(false);
-    setError(null); // Clear errors
   };
 
-  const handleSaveTitle = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setError("Authorization token not found. Please log in.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (!quizId) {
-      setError("Quiz ID is missing for update.");
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${config.apiUrl}/v1/quizzes/${quizId}/title`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: title,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update quiz title.");
-      }
-
-      // If successful, update the originalTitle and inform the parent
-      setOriginalTitle(title);
-      setIsEditing(false);
-      onTitleUpdated(title); // Call the callback to update the parent's quizData state
-    } catch (err) {
-      console.error("Error updating quiz title:", err);
-      setError((err as Error).message || "An unexpected error occurred.");
-    } finally {
-      setIsLoading(false);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave();
     }
   };
 
   return (
-    <div className="w-full max-w-[800px] bg-[#EFE9FC] rounded-[24px] px-[32px] py-[24px] flex items-center justify-between shadow-[0px_2px_6px_#00000014] relative">
+    <div className="bg-white rounded-[32px] px-[128px] py-[32px] flex items-center justify-center gap-[16px] relative shadow-[0px_2px_6px_#00000014] w-[1000px]">
       {isEditing ? (
         <>
           <input
             type="text"
             value={title}
-            onChange={handleTitleChange}
-            className="flex-1 bg-transparent border-b border-[#5F24E0] text-[#000000] font-['Archivo'] text-[28px] font-semibold focus:outline-none"
-            disabled={isLoading} // Disable input while saving
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={handleSave}
+            onKeyPress={handleKeyPress}
+            className="font-['Archivo'] text-[28px] font-medium text-[#1C0B43] text-center bg-transparent outline-none border-none"
+            style={{ width: `${title.length + 2}ch` }}
+            autoFocus
           />
-          <div className="flex gap-2 ml-4">
-            <button
-              onClick={handleSaveTitle}
-              className="px-4 py-2 bg-[#5F24E0] text-white rounded-lg hover:bg-[#9F7CEC] transition-colors duration-200"
-              disabled={isLoading}
-            >
-              {isLoading ? "Saving..." : "Save"}
-            </button>
-            <button
-              onClick={handleCancelEdit}
-              className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200"
-              disabled={isLoading}
-            >
-              Cancel
-            </button>
-          </div>
+          <div className="w-[20px] flex-shrink-0 ml-[16px]" />
         </>
       ) : (
         <>
-          <h3 className="font-['Archivo'] text-[28px] font-semibold text-[#5F24E0]">
+          <span className="font-['Archivo'] text-[28px] font-medium text-[#1C0B43] text-center">
             {title}
-          </h3>
+          </span>
           <button
-            onClick={handleEditClick}
-            className="flex items-center gap-[8px] text-[#5F24E0] hover:text-[#9F7CEC] transition-colors duration-200"
+            onClick={() => setIsEditing(true)}
+            className="flex items-center justify-center flex-shrink-0 w-[20px] ml-[16px]"
           >
-            {/* Edit icon SVG */}
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M16 3L21 8L8 21H3V16L16 3Z"
-                stroke="#5F24E0"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span className="font-['Archivo'] text-[16px] font-semibold">
-              Edit Title
-            </span>
+            <PencilIcon />
           </button>
         </>
-      )}
-      {error && (
-        <p className="text-red-500 text-sm absolute bottom-2 left-4">{error}</p>
       )}
     </div>
   );
 };
-
-export default QuizTitleEditor;
 
 // Quiz Tag Component
 const QuizTag = ({ icon, text }: { icon: React.ReactNode; text: string }) => (
@@ -715,17 +607,8 @@ const QuizTag = ({ icon, text }: { icon: React.ReactNode; text: string }) => (
   </div>
 );
 
-// Define the interface for your quiz data to ensure type safety
-interface QuizData {
-  id: string;
-  title: string;
-  topic: string;
-  numberOfQuestions: number;
-  timeLimit: number; // Assuming this is in seconds based on your example
-  // Add any other fields from the API response that you might want to use
-}
-
 export function QuizGenerator() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">(
     "medium"
@@ -749,16 +632,6 @@ export function QuizGenerator() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTagInput, setCustomTagInput] = useState("");
   const [customTags, setCustomTags] = useState<string[]>([]);
-  const [quizData, setQuizData] = useState<QuizData | null>(null);
-
-  //navigate to redirect user after save to drafts button
-  const navigate = useNavigate();
-
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
 
   const handleTagToggle = (tagText: string) => {
     setSelectedTags((prev) =>
@@ -785,6 +658,9 @@ export function QuizGenerator() {
   const handleSubmit = async () => {
     setIsLoading(true);
     setError(null);
+
+    // TODO: Re-enable API integration when UI work is complete
+    /*
     const token = localStorage.getItem("token");
     if (!token) {
       setError("Authorization token not found. Please log in.");
@@ -828,12 +704,33 @@ export function QuizGenerator() {
     } finally {
       setIsLoading(false);
     }
+    */
+
+    // Temporary UI-only mode - simulate API response
+    setTimeout(() => {
+      // Mock subtopic suggestions for step 2
+      setSubtopicSuggestions([
+        { id: "1", text: "Variables and Data Types" },
+        { id: "2", text: "Functions and Scope" },
+        { id: "3", text: "DOM Manipulation" },
+        { id: "4", text: "Event Handling" },
+        { id: "5", text: "Asynchronous Programming" },
+        { id: "6", text: "ES6+ Features" },
+        { id: "7", text: "Error Handling" },
+        { id: "8", text: "Browser APIs" },
+      ]);
+      setQuizId("mock-quiz-id");
+      setCurrentStep(2);
+      setIsLoading(false);
+    }, 1000); // Simulate network delay
   };
 
   const handleGenerateStage2 = async () => {
     setIsLoading(true);
     setError(null);
 
+    // TODO: Re-enable API integration when UI work is complete
+    /*
     const token = localStorage.getItem("token");
     if (!token) {
       setError("Authorization token not found. Please log in.");
@@ -866,8 +763,6 @@ export function QuizGenerator() {
         throw new Error(errorData.message || "Failed to generate quiz.");
       }
 
-      const result = await response.json();
-      setQuizData(result.data); // Store the entire 'data' object here
       setCurrentStep(3);
     } catch (err) {
       console.error("Error generating quiz:", err);
@@ -875,6 +770,18 @@ export function QuizGenerator() {
     } finally {
       setIsLoading(false);
     }
+    */
+
+    // Temporary UI-only mode - simulate API response
+    setTimeout(() => {
+      setCurrentStep(3);
+      setIsLoading(false);
+    }, 1000); // Simulate network delay
+  };
+
+  const handleStartQuiz = () => {
+    // Navigate to the quiz page with a mock quiz ID
+    navigate("/quizzes/take/123");
   };
 
   const getStepText = () => {
@@ -905,13 +812,13 @@ export function QuizGenerator() {
               xmlns="http://www.w3.org/2000/svg"
               className="flex-shrink-0"
             >
-              <path
-                d="M20 6L9 17L4 12"
-                stroke="white"
-                strokeWidth="7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+                              <path
+                  d="M20 6L9 17L4 12"
+                  stroke="white"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
             </svg>
           </div>
 
@@ -948,43 +855,26 @@ export function QuizGenerator() {
           <div className="mb-[64px]" />
 
           {/* Quiz title rectangle with edit functionality */}
-          {quizData && ( // Only render if quizData is available
-            <QuizTitleEditor
-              initialTitle={quizData.title}
-              quizId={quizData.id}
-              onTitleUpdated={(newTitle) =>
-                setQuizData((prev) =>
-                  prev ? { ...prev, title: newTitle } : prev
-                )
-              }
-            />
-          )}
+          <QuizTitleEditor />
 
           {/* 32px spacing */}
           <div className="mb-[32px]" />
 
           {/* 3 tags with icons */}
           <div className="flex items-center gap-[24px]">
-            {quizData && ( // Only render if quizData is available
-              <>
-                <QuizTag
-                  icon={<ClockIcon />}
-                  text={formatTime(quizData.timeLimit)}
-                />
-                <QuizTag icon={<DocumentIcon />} text={quizData.topic} />
-                <QuizTag
-                  icon={<MenuIcon />}
-                  text={`${quizData.numberOfQuestions} Questions`}
-                />
-              </>
-            )}
+            <QuizTag icon={<ClockIcon />} text="20:00" />
+            <QuizTag icon={<DocumentIcon />} text="CSS" />
+            <QuizTag icon={<MenuIcon />} text="18 Questions" />
           </div>
 
           {/* 64px spacing */}
           <div className="mb-[64px]" />
 
           {/* Start button */}
-          <button className="bg-[#5F24E0] hover:bg-[#9F7CEC] text-[#EFE9FC] font-['Archivo'] text-[22px] font-semibold rounded-[24px] py-[27px] px-[125px] transition-all duration-200">
+          <button 
+            onClick={handleStartQuiz}
+            className="bg-[#5F24E0] hover:bg-[#9F7CEC] text-[#EFE9FC] font-['Archivo'] text-[22px] font-semibold rounded-[24px] py-[27px] px-[125px] transition-all duration-200"
+          >
             Start
           </button>
 
@@ -1004,10 +894,7 @@ export function QuizGenerator() {
           <div className="mb-[24px]" />
 
           {/* Save to drafts */}
-          <button
-            onClick={() => navigate("/quizzes")}
-            className="flex items-center gap-[8px] text-[#5F24E0] hover:text-[#9F7CEC] transition-colors duration-200"
-          >
+          <button className="flex items-center gap-[8px] text-[#5F24E0] hover:text-[#9F7CEC] transition-colors duration-200">
             <SaveIcon />
             <span className="font-['Archivo'] text-[16px] font-semibold">
               Save to drafts
@@ -1033,276 +920,278 @@ export function QuizGenerator() {
 
           <div className="bg-[#FFFFFF] rounded-[32px] flex-1 p-[32px] shadow-[0px_2px_6px_#00000014]">
             {currentStep === 1 && (
-              <>
-                <FormHeader
-                  icon={<OctopusIcon />}
-                  title="Quiz Topic or Prompt"
-                  subtitle="Describe what you want to test"
-                />
-                <div className="mb-[16px]" />
-                <textarea
-                  className="w-full bg-[#EFE9FC40] border-2 border-[#A6B5BB] rounded-[12px] p-[32px] font-['Archivo'] text-[22px] font-normal text-[#1C0B43] placeholder-[#A6B5BB] focus:border-[#5F24E0] focus:outline-none resize-none overflow-y-auto"
-                  style={{
-                    caretColor: "#1C0B43",
-                    height: "calc(1.5em + 64px)",
-                    minHeight: "calc(1.5em + 64px)",
-                  }}
-                  placeholder="Be specific about the topic, difficulty level, and any special focus areas. The more detailed your prompt, the better the AI-generated quiz will be."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                />
-                <div className="mb-[39px]" />
+            <>
+              <FormHeader
+                icon={<OctopusIcon />}
+                title="Quiz Topic or Prompt"
+                subtitle="Describe what you want to test"
+              />
+              <div className="mb-[16px]" />
+              <textarea
+                className="w-full bg-[#EFE9FC40] border-2 border-[#A6B5BB] rounded-[12px] p-[32px] font-['Archivo'] text-[22px] font-normal text-[#1C0B43] placeholder-[#A6B5BB] focus:border-[#5F24E0] focus:outline-none resize-none overflow-y-auto"
+                style={{
+                  caretColor: "#1C0B43",
+                  height: "calc(1.5em + 64px)",
+                  minHeight: "calc(1.5em + 64px)",
+                }}
+                placeholder="Be specific about the topic, difficulty level, and any special focus areas. The more detailed your prompt, the better the AI-generated quiz will be."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+              />
+              <div className="mb-[39px]" />
 
-                <FormHeader
-                  icon={<SettingsIcon />}
-                  title="Customize Your Quiz"
-                  subtitle="Adjust settings to match your needs"
-                />
-                <div className="mb-[32px]" />
+              <FormHeader
+                icon={<SettingsIcon />}
+                title="Customize Your Quiz"
+                subtitle="Adjust settings to match your needs"
+              />
+              <div className="mb-[32px]" />
 
-                <div className="flex items-center">
-                  <GaugeIcon />
-                  <div className="ml-[16px]">
-                    <p className="font-['Archivo'] text-[22px] font-normal text-[#1C0B43] text-left">
-                      Difficulty Level
+              <div className="flex items-center">
+                <GaugeIcon />
+                <div className="ml-[16px]">
+                  <p className="font-['Archivo'] text-[22px] font-normal text-[#1C0B43] text-left">
+                    Difficulty Level
+                  </p>
+                </div>
+              </div>
+              <div className="mb-[16px]" />
+
+              <div className="flex gap-[32px]">
+                <DifficultyOption
+                  level="easy"
+                  current={difficulty}
+                  setDifficulty={setDifficulty}
+                  stars={<StarIcon width={32} />}
+                  description="Basic concepts and fundamentals"
+                />
+                <DifficultyOption
+                  level="medium"
+                  current={difficulty}
+                  setDifficulty={setDifficulty}
+                  stars={
+                    <div className="flex">
+                      <StarIcon width={16} />
+                      <StarIcon width={16} />
+                    </div>
+                  }
+                  description="Intermediate knowledge and application"
+                />
+                <DifficultyOption
+                  level="hard"
+                  current={difficulty}
+                  setDifficulty={setDifficulty}
+                  stars={
+                    <div className="flex">
+                      <StarIcon width={11} />
+                      <StarIcon width={11} />
+                      <StarIcon width={11} />
+                    </div>
+                  }
+                  description="Advanced topics and scenarios"
+                />
+              </div>
+              <div className="mb-[32px]" />
+
+              <div className="flex items-start gap-[128px]">
+                <NumberInput
+                  value={numberOfQuestions}
+                  setValue={setNumberOfQuestions}
+                  label="Number of Questions"
+                  icon={<DocumentIcon />}
+                />
+
+                <div className="flex flex-col">
+                  <div className="flex items-center mb-[16px]">
+                    <CheckIcon />
+                    <p className="font-['Archivo'] text-[22px] font-normal text-[#1C0B43] text-left ml-[16px]">
+                      Question Types
                     </p>
                   </div>
-                </div>
-                <div className="mb-[16px]" />
-
-                <div className="flex gap-[32px]">
-                  <DifficultyOption
-                    level="easy"
-                    current={difficulty}
-                    setDifficulty={setDifficulty}
-                    stars={<StarIcon width={32} />}
-                    description="Basic concepts and fundamentals"
-                  />
-                  <DifficultyOption
-                    level="medium"
-                    current={difficulty}
-                    setDifficulty={setDifficulty}
-                    stars={
-                      <div className="flex">
-                        <StarIcon width={16} />
-                        <StarIcon width={16} />
-                      </div>
-                    }
-                    description="Intermediate knowledge and application"
-                  />
-                  <DifficultyOption
-                    level="hard"
-                    current={difficulty}
-                    setDifficulty={setDifficulty}
-                    stars={
-                      <div className="flex">
-                        <StarIcon width={11} />
-                        <StarIcon width={11} />
-                        <StarIcon width={11} />
-                      </div>
-                    }
-                    description="Advanced topics and scenarios"
-                  />
-                </div>
-                <div className="mb-[32px]" />
-
-                <div className="flex items-start gap-[128px]">
-                  <NumberInput
-                    value={numberOfQuestions}
-                    setValue={setNumberOfQuestions}
-                    label="Number of Questions"
-                    icon={<DocumentIcon />}
-                  />
-
-                  <div className="flex flex-col">
-                    <div className="flex items-center mb-[16px]">
-                      <CheckIcon />
-                      <p className="font-['Archivo'] text-[22px] font-normal text-[#1C0B43] text-left ml-[16px]">
-                        Question Types
-                      </p>
-                    </div>
-                    <div className="flex gap-[32px]">
-                      <QuestionTypeButton
-                        type="multipleChoice"
-                        label="Multiple Choice"
-                        isSelected={questionTypes.multipleChoice}
-                        onClick={() =>
-                          setQuestionTypes({
-                            ...questionTypes,
-                            multipleChoice: !questionTypes.multipleChoice,
-                          })
-                        }
-                      />
-                      <QuestionTypeButton
-                        type="trueFalse"
-                        label="True / False"
-                        isSelected={questionTypes.trueFalse}
-                        onClick={() =>
-                          setQuestionTypes({
-                            ...questionTypes,
-                            trueFalse: !questionTypes.trueFalse,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <NumberInput
-                    value={timeLimit}
-                    setValue={setTimeLimit}
-                    label="Time Limit (minutes)"
-                    icon={<ClockIcon />}
-                  />
-                </div>
-                <div className="mb-[32px]" />
-              </>
-            )}
-
-            {currentStep === 2 && (
-              <>
-                <div className="flex flex-col">
-                  <h2 className="font-['Archivo'] text-[32px] font-semibold text-[#1C0B43] text-left">
-                    Your Quiz Prompt
-                  </h2>
-                  <div className="mb-[8px]" />
-                  <p className="font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] text-left">
-                    This is the main topic of your quiz from step 1
-                  </p>
-                </div>
-                <div className="mb-[16px]" />
-
-                <div className="relative">
-                  <div className="w-full bg-[#EFE9FC40] border-2 border-[#A6B5BB] rounded-[12px] p-[32px] font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] min-h-[calc(1.5em + 64px)] flex items-center pr-[120px]">
-                    {prompt ||
-                      "Be specific about the topic, difficulty level, and any special focus areas..."}
-                  </div>
-                  <button
-                    onClick={() => setCurrentStep(1)}
-                    className="absolute right-[32px] top-1/2 transform -translate-y-1/2 bg-[#D6D6D6] rounded-[8px] py-[8px] px-[16px] font-['Archivo'] text-[22px] font-normal text-[#1C0B43]"
-                  >
-                    Edit
-                  </button>
-                </div>
-                <div className="mb-[32px]" />
-
-                <div className="flex flex-col">
-                  <h2 className="font-['Archivo'] text-[32px] font-semibold text-[#1C0B43] text-left">
-                    Suggested Subtopics
-                  </h2>
-                  <div className="mb-[8px]" />
-                  <p className="font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] text-left">
-                    Select up to 10 subtopics to include in your quiz
-                  </p>
-                </div>
-                <div className="mb-[16px]" />
-
-                <div className="flex flex-wrap gap-[16px]">
-                  {subtopicSuggestions.map((tag) => (
-                    <TagButton
-                      key={tag.id}
-                      tag={tag.text}
-                      isSelected={selectedTags.includes(tag.text)}
-                      onClick={() => handleTagToggle(tag.text)}
+                  <div className="flex gap-[32px]">
+                    <QuestionTypeButton
+                      type="multipleChoice"
+                      label="Multiple Choice"
+                      isSelected={questionTypes.multipleChoice}
+                      onClick={() =>
+                        setQuestionTypes({
+                          ...questionTypes,
+                          multipleChoice: !questionTypes.multipleChoice,
+                        })
+                      }
                     />
-                  ))}
-                  {customTags.map((tag, index) => (
-                    <TagButton
-                      key={`custom-${index}`}
-                      tag={tag}
-                      isSelected={selectedTags.includes(tag)}
-                      onClick={() => handleTagToggle(tag)}
+                    <QuestionTypeButton
+                      type="trueFalse"
+                      label="True / False"
+                      isSelected={questionTypes.trueFalse}
+                      onClick={() =>
+                        setQuestionTypes({
+                          ...questionTypes,
+                          trueFalse: !questionTypes.trueFalse,
+                        })
+                      }
                     />
-                  ))}
+                  </div>
                 </div>
-                <div className="mb-[16px]" />
 
-                <div className="flex items-center gap-[16px]">
-                  <input
-                    type="text"
-                    value={customTagInput}
-                    onChange={(e) => setCustomTagInput(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter" && isAddButtonActive)
-                        handleAddCustomTag();
-                    }}
-                    className="flex-1 bg-[#EFE9FC40] border-2 border-[#A6B5BB] rounded-[12px] py-[16px] px-[32px] font-['Archivo'] text-[22px] font-normal text-[#1C0B43] placeholder-[#A6B5BB] focus:border-[#5F24E0] focus:outline-none"
-                    style={{ caretColor: "#1C0B43" }}
-                    placeholder="Add your own subtopic..."
-                  />
-                  <button
-                    onClick={handleAddCustomTag}
-                    disabled={!isAddButtonActive}
-                    className={`flex items-center justify-center rounded-[16px] transition-all duration-200 ${
-                      isAddButtonActive
-                        ? "bg-[#5F24E0] hover:bg-[#9F7CEC] cursor-pointer"
-                        : "bg-[#D6D6D6] cursor-not-allowed"
-                    }`}
-                    style={{
-                      height: "calc(32px + 32px)",
-                      width: "calc(32px + 32px)",
-                      minHeight: "calc(32px + 32px)",
-                      minWidth: "calc(32px + 32px)",
-                    }}
-                  >
-                    <PlusIcon />
-                  </button>
-                </div>
-                <div className="mb-[16px]" />
-
-                <p className="font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] text-left">
-                  {selectedTags.length}/10 subtopics selected
-                </p>
-                <div className="mb-[32px]" />
-
-                <div className="flex flex-col">
-                  <h2 className="font-['Archivo'] text-[32px] font-semibold text-[#1C0B43] text-left">
-                    Additional Preferences
-                  </h2>
-                  <div className="mb-[8px]" />
-                  <p className="font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] text-left">
-                    Add any specific requirements or preferences (optional)
-                  </p>
-                </div>
-                <div className="mb-[16px]" />
-
-                <input
-                  type="text"
-                  value={additionalPrefs}
-                  onChange={(e) => setAdditionalPrefs(e.target.value)}
-                  className="w-full bg-[#EFE9FC40] border-2 border-[#A6B5BB] rounded-[12px] py-[16px] px-[32px] font-['Archivo'] text-[22px] font-normal text-[#1C0B43] placeholder-[#A6B5BB] focus:border-[#5F24E0] focus:outline-none"
-                  style={{ caretColor: "#1C0B43" }}
-                  placeholder="e.g., Focus on recent developments, include practical examples..."
+                <NumberInput
+                  value={timeLimit}
+                  setValue={setTimeLimit}
+                  label="Time Limit (minutes)"
+                  icon={<ClockIcon />}
                 />
-                <div className="mb-[32px]" />
+              </div>
+              <div className="mb-[32px]" />
+            </>
+          )}
 
-                <div className="flex justify-center">
-                  <GenerateButton
-                    onClick={handleGenerateStage2}
-                    isLoading={isLoading}
-                  />
+          {currentStep === 2 && (
+            <>
+              <div className="flex flex-col">
+                <h2 className="font-['Archivo'] text-[32px] font-semibold text-[#1C0B43] text-left">
+                  Your Quiz Prompt
+                </h2>
+                <div className="mb-[8px]" />
+                <p className="font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] text-left">
+                  This is the main topic of your quiz from step 1
+                </p>
+              </div>
+              <div className="mb-[16px]" />
+
+              <div className="relative">
+                <div className="w-full bg-[#EFE9FC40] border-2 border-[#A6B5BB] rounded-[12px] p-[32px] font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] min-h-[calc(1.5em + 64px)] flex items-center pr-[120px]">
+                  {prompt ||
+                    "Be specific about the topic, difficulty level, and any special focus areas..."}
                 </div>
-              </>
-            )}
-
-            {currentStep === 1 && (
-              <div className="flex justify-center mt-8">
                 <button
-                  onClick={handleSubmit}
-                  disabled={isLoading}
-                  className={`font-['Archivo'] text-[22px] font-semibold rounded-[24px] py-[27px] px-[134px] transition-all duration-200 ${
-                    isLoading
-                      ? "text-[#ABABAB] bg-[#D6D6D6] cursor-not-allowed"
-                      : "text-[#EFE9FC] bg-[#5F24E0] hover:bg-[#9F7CEC]"
-                  }`}
+                  onClick={() => setCurrentStep(1)}
+                  className="absolute right-[32px] top-1/2 transform -translate-y-1/2 bg-[#D6D6D6] rounded-[8px] py-[8px] px-[16px] font-['Archivo'] text-[22px] font-normal text-[#1C0B43]"
                 >
-                  {isLoading ? "Generating..." : "Continue"}
+                  Edit
                 </button>
               </div>
-            )}
+              <div className="mb-[32px]" />
 
-            {error && (
-              <div className="text-red-500 text-center mt-4">{error}</div>
-            )}
+              <div className="flex flex-col">
+                <h2 className="font-['Archivo'] text-[32px] font-semibold text-[#1C0B43] text-left">
+                  Suggested Subtopics
+                </h2>
+                <div className="mb-[8px]" />
+                <p className="font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] text-left">
+                  Select up to 10 subtopics to include in your quiz
+                </p>
+              </div>
+              <div className="mb-[16px]" />
+
+              <div className="flex flex-wrap gap-[16px]">
+                {subtopicSuggestions.map((tag) => (
+                  <TagButton
+                    key={tag.id}
+                    tag={tag.text}
+                    isSelected={selectedTags.includes(tag.text)}
+                    onClick={() => handleTagToggle(tag.text)}
+                  />
+                ))}
+                {customTags.map((tag, index) => (
+                  <TagButton
+                    key={`custom-${index}`}
+                    tag={tag}
+                    isSelected={selectedTags.includes(tag)}
+                    onClick={() => handleTagToggle(tag)}
+                  />
+                ))}
+              </div>
+              <div className="mb-[16px]" />
+
+              <div className="flex items-center gap-[16px]">
+                <input
+                  type="text"
+                  value={customTagInput}
+                  onChange={(e) => setCustomTagInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter" && isAddButtonActive)
+                      handleAddCustomTag();
+                  }}
+                  className="flex-1 bg-[#EFE9FC40] border-2 border-[#A6B5BB] rounded-[12px] py-[16px] px-[32px] font-['Archivo'] text-[22px] font-normal text-[#1C0B43] placeholder-[#A6B5BB] focus:border-[#5F24E0] focus:outline-none"
+                  style={{ caretColor: "#1C0B43" }}
+                  placeholder="Add your own subtopic..."
+                />
+                <button
+                  onClick={handleAddCustomTag}
+                  disabled={!isAddButtonActive}
+                  className={`flex items-center justify-center rounded-[16px] transition-all duration-200 ${
+                    isAddButtonActive
+                      ? "bg-[#5F24E0] hover:bg-[#9F7CEC] cursor-pointer"
+                      : "bg-[#D6D6D6] cursor-not-allowed"
+                  }`}
+                  style={{
+                    height: "calc(32px + 32px)",
+                    width: "calc(32px + 32px)",
+                    minHeight: "calc(32px + 32px)",
+                    minWidth: "calc(32px + 32px)",
+                  }}
+                >
+                  <PlusIcon />
+                </button>
+              </div>
+              <div className="mb-[16px]" />
+
+              <p className="font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] text-left">
+                {selectedTags.length}/10 subtopics selected
+              </p>
+              <div className="mb-[32px]" />
+
+              <div className="flex flex-col">
+                <h2 className="font-['Archivo'] text-[32px] font-semibold text-[#1C0B43] text-left">
+                  Additional Preferences
+                </h2>
+                <div className="mb-[8px]" />
+                <p className="font-['Archivo'] text-[22px] font-normal text-[#A6B5BB] text-left">
+                  Add any specific requirements or preferences (optional)
+                </p>
+              </div>
+              <div className="mb-[16px]" />
+
+              <input
+                type="text"
+                value={additionalPrefs}
+                onChange={(e) => setAdditionalPrefs(e.target.value)}
+                className="w-full bg-[#EFE9FC40] border-2 border-[#A6B5BB] rounded-[12px] py-[16px] px-[32px] font-['Archivo'] text-[22px] font-normal text-[#1C0B43] placeholder-[#A6B5BB] focus:border-[#5F24E0] focus:outline-none"
+                style={{ caretColor: "#1C0B43" }}
+                placeholder="e.g., Focus on recent developments, include practical examples..."
+              />
+              <div className="mb-[32px]" />
+
+              <div className="flex justify-center">
+                <GenerateButton
+                  onClick={handleGenerateStage2}
+                  isLoading={isLoading}
+                />
+              </div>
+            </>
+          )}
+
+
+
+          {currentStep === 1 && (
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={handleSubmit}
+                disabled={isLoading}
+                className={`font-['Archivo'] text-[22px] font-semibold rounded-[24px] py-[27px] px-[134px] transition-all duration-200 ${
+                  isLoading
+                    ? "text-[#ABABAB] bg-[#D6D6D6] cursor-not-allowed"
+                    : "text-[#EFE9FC] bg-[#5F24E0] hover:bg-[#9F7CEC]"
+                }`}
+              >
+                {isLoading ? "Generating..." : "Continue"}
+              </button>
+            </div>
+          )}
+
+          {error && (
+            <div className="text-red-500 text-center mt-4">{error}</div>
+          )}
           </div>
           <div className="mb-[38px]" />
         </div>
