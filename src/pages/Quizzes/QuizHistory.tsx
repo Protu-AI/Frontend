@@ -41,13 +41,31 @@ export function QuizHistory() {
   const [failedQuizzes, setFailedQuizzes] = useState<Quiz[]>([]);
   const [draftQuizzes, setDraftQuizzes] = useState<DraftQuiz[]>([]);
 
-  // Helper function to format duration (seconds to mm:ss)
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
-  };
+  function formatDuration(
+    dateIsoString: string,
+    hoursToAdd: number = 3
+  ): string {
+    // 1. Create a Date object from the ISO string.
+    // When parsing an ISO string with 'Z', the Date object's internal value will be UTC.
+    const date = new Date(dateIsoString);
 
+    // 2. Add the specified hours to the UTC hour component of the date.
+    // We use getUTCHours() and setUTCHours() to manipulate the UTC components directly,
+    // ensuring the addition is consistent regardless of the client's local timezone.
+    date.setUTCHours(date.getUTCHours() + hoursToAdd);
+
+    // 3. Extract the hour, minute, and second components from the *adjusted UTC time*.
+    // Then format them with leading zeros.
+    const hours: number = date.getUTCHours();
+    const minutes: number = date.getUTCMinutes();
+    const seconds: number = date.getUTCSeconds();
+
+    const paddedHours: string = String(hours).padStart(2, "0");
+    const paddedMinutes: string = String(minutes).padStart(2, "0");
+    const paddedSeconds: string = String(seconds).padStart(2, "0");
+
+    return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+  }
   // Helper function to format date (ISO string to MMM dd, yyyy)
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -56,6 +74,10 @@ export function QuizHistory() {
       month: "short",
       day: "numeric",
     });
+  };
+
+  const handleStartQuiz = (draftId: string) => {
+    navigate(`/quizzes/take/${draftId}`);
   };
 
   // Fetch dashboard summary
@@ -82,8 +104,8 @@ export function QuizHistory() {
       const data = await response.json();
       setSummaryData({
         totalQuizzes: data.data.totalQuizzes,
-        averageScore: data.data.averageScore,
-        successRate: data.data.successRate,
+        averageScore: Math.round(parseFloat(data.data.averageScore) * 10) / 10,
+        successRate: Math.round(parseFloat(data.data.successRate) * 10) / 10,
       });
     } catch (err) {
       setError("Failed to load dashboard summary");
@@ -117,9 +139,9 @@ export function QuizHistory() {
         id: quiz.id,
         title: quiz.title,
         topic: quiz.topic,
-        duration: formatDuration(quiz.timeTaken),
+        duration: formatDuration(quiz.dateTaken),
         date: formatDate(quiz.dateTaken),
-        score: quiz.score,
+        score: Math.round(parseFloat(quiz.score) * 10) / 10,
         status: "passed" as const,
       }));
       setPassedQuizzes(formattedQuizzes);
@@ -155,9 +177,9 @@ export function QuizHistory() {
         id: quiz.id,
         title: quiz.title,
         topic: quiz.topic,
-        duration: formatDuration(quiz.timeTaken),
+        duration: formatDuration(quiz.dateTaken),
         date: formatDate(quiz.dateTaken),
-        score: quiz.score,
+        score: Math.round(parseFloat(quiz.score) * 10) / 10,
         status: "failed" as const,
       }));
       setFailedQuizzes(formattedQuizzes);
@@ -908,7 +930,10 @@ export function QuizHistory() {
                     </button>
 
                     {/* Retry Button */}
-                    <button className="p-[12px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group">
+                    <button
+                      onClick={() => navigate(`/quizzes/take/${quiz.id}`)}
+                      className="p-[12px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group"
+                    >
                       <svg
                         width="22"
                         height="22"
@@ -1062,7 +1087,10 @@ export function QuizHistory() {
                       {/* Right Side - Start and Delete Buttons */}
                       <div className="flex items-center gap-[24px]">
                         {/* Start Button */}
-                        <button className="py-[12px] px-[24px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group">
+                        <button
+                          onClick={() => handleStartQuiz(draft.id)}
+                          className="py-[12px] px-[24px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group"
+                        >
                           <span className="font-['Archivo'] text-[16px] font-semibold text-center text-[#5F24E0] group-hover:text-[#EFE9FC]">
                             Start
                           </span>

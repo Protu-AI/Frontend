@@ -42,7 +42,9 @@ export function Quizzes() {
 
         const data = await response.json();
         // Set to true if totalQuizzes is greater than 0
-        setHasPastQuizzes(data.data.totalQuizzes > 0);
+        setHasPastQuizzes(
+          data.data.totalQuizzes > 0 || data.data.draftedQuizzes > 0
+        );
       } catch (error) {
         // On network or other errors, assume no past quizzes
         console.error("Failed to fetch quiz summary:", error);

@@ -27,7 +27,6 @@ export function LessonChatWindow({
   const {
     handleSendMessage: sendMessage,
     currentSessionId,
-    handleNewChat,
     sessions,
   } = useChat();
 
@@ -100,13 +99,6 @@ export function LessonChatWindow({
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      // Ensure we have an active session
-      if (!currentSessionId) {
-        await handleNewChat();
-        return;
-      }
-
-      // Send message via context (which makes the API call)
       const response = await sendMessage(content, file);
 
       if (response && response.data) {
