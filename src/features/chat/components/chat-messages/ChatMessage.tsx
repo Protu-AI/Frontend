@@ -46,10 +46,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         className={cn(
-          "relative max-w-[600px] font-['Archivo'] text-[18px] md:text-[20px] font-normal text-[#1C0B43] dark:text-[#EFE9FC] leading-relaxed",
+          "relative max-w-[600px] font-['Archivo'] text-[18px] md:text-[20px] font-normal text-[#1C0B43] leading-relaxed",
           isBot
             ? "bg-transparent"
-            : "bg-gradient-to-br from-purple-400 to-purple-300 shadow-lg hover:shadow-xl hover:shadow-purple-600/40 hover:-translate-y-0.5 transition-all duration-300 ease-in-out shadow-purple-600/30 rounded-br-none text-white font-['Archivo'] dark:bg-[#BFA7F3]/80 rounded-2xl p-[12px]"
+            : "bg-[#EFE9FC] hover:-translate-y-0.5 transition-all duration-300 ease-in-out shadow-purple-600/30 rounded-br-none font-['Archivo'] dark:bg-[#BFA7F3]/80 rounded-2xl p-[12px]"
         )}
       >
         {isBot && (
@@ -142,8 +142,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
         {hasAttachment && (
           <div className="flex items-center mt-2">
-            <Paperclip className="h-4 w-4 text-white dark:text-[#EFE9FC] mr-2" />
-            <span className="text-sm text-[#643cbc] dark:text-[#EFE9FC]">
+            <Paperclip className="h-4 w-4 dark:text-[#EFE9FC] mr-2" />
+            <span className="text-sm dark:text-[#EFE9FC]">
               {message.attachment?.name}
             </span>
           </div>

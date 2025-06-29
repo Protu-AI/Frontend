@@ -78,7 +78,9 @@ export function SignInStepOne({
       variants={containerVariants}
     >
       <motion.div className="pt-8" variants={fadeIn}>
-        <Logo />
+        <Link to="/">
+          <Logo />
+        </Link>
       </motion.div>
 
       <div className="flex items-center justify-center">

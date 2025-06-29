@@ -58,13 +58,11 @@ export function QuizHistory() {
     // Then format them with leading zeros.
     const hours: number = date.getUTCHours();
     const minutes: number = date.getUTCMinutes();
-    const seconds: number = date.getUTCSeconds();
 
     const paddedHours: string = String(hours).padStart(2, "0");
     const paddedMinutes: string = String(minutes).padStart(2, "0");
-    const paddedSeconds: string = String(seconds).padStart(2, "0");
 
-    return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+    return `${paddedHours}:${paddedMinutes}`;
   }
   // Helper function to format date (ISO string to MMM dd, yyyy)
   const formatDate = (dateString: string) => {
