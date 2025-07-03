@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface GenderSelectProps {
   value: string;
@@ -10,8 +10,11 @@ export function GenderSelect({ value, onChange, error }: GenderSelectProps) {
   return (
     <div className="space-y-2">
       <div className="flex gap-8">
-        {['Male', 'Female', 'Other'].map((gender) => (
-          <label key={gender} className="flex items-center gap-2 cursor-pointer">
+        {["Male", "Female"].map((gender) => (
+          <label
+            key={gender}
+            className="flex items-center gap-2 cursor-pointer"
+          >
             <input
               type="radio"
               name="gender"

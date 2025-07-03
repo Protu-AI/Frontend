@@ -144,14 +144,6 @@ export function LessonChatWindow({
           exit={{ opacity: 0, x: 50 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
-          {/* Close Button */}
-          <button
-            onClick={() => setIsOpen(false)}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-[#5F24E0]/10 transition-colors"
-          >
-            <X className="w-5 h-5 text-[#5F24E0]" />
-          </button>
-
           {/* Content Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {messages.length === 0 ? (
@@ -179,7 +171,6 @@ export function LessonChatWindow({
           <div className="flex-none mt-[32px]">
             <ChatInputContainer
               onSendMessage={handleSendMessage}
-              isExpanded={isTyping}
               className="w-full"
             />
           </div>

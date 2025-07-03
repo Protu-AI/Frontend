@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface WelcomeHeaderProps {
   userName: string;
@@ -7,10 +7,12 @@ interface WelcomeHeaderProps {
 
 export function WelcomeHeader({ userName, isVisible }: WelcomeHeaderProps) {
   return (
-    <div className={cn(
-      "w-[772px] mb-7 transition-all duration-500 ease-in-out pl-[27px]",
-      !isVisible && "opacity-0 translate-y-[-16px]"
-    )}>
+    <div
+      className={cn(
+        "w-[772px] mb-7 transition-all duration-500 ease-in-out mr-40",
+        !isVisible && "opacity-0 translate-y-[-16px]"
+      )}
+    >
       <h1 className="font-['Archivo'] text-base font-normal text-[#ABABAB] dark:text-[#EFE9FC] mb-1 transition-colors duration-1000">
         Welcome, {userName}!
       </h1>

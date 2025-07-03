@@ -396,36 +396,6 @@ const ContactInfo: React.FC = () => {
           </div>
         </div>
       </SettingsSection>
-
-      <SettingsSection>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <SettingsHeading>Bio</SettingsHeading>
-          <div
-            style={{ ...editButtonStyle }}
-            onMouseEnter={(e) => {
-              Object.assign(e.currentTarget.style, editButtonHoverStyle);
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.currentTarget.style, editButtonStyle);
-            }}
-          >
-            Edit
-            <Pencil size={14} fill="#A6B5BB" color="#A6B5BB" />
-          </div>
-        </div>
-        <div style={{ paddingLeft: "32px" }}></div>
-        <div style={{ ...bioStyle, marginBottom: "32px" }}>
-          Passionate programmer and tech enthusiast | Always learning, always
-          coding | Specializing in Python, JavaScript, and AI development. Let’s
-          build something amazing together!
-        </div>
-      </SettingsSection>
     </>
   );
 };

@@ -357,52 +357,6 @@ const AccountSecurity: React.FC = () => {
               </div>
             </div>
           </SettingsSection>
-
-          <SettingsSection>
-            <SettingsHeading>Two-step verification</SettingsHeading>
-            <div style={{ marginBottom: "32px" }}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div style={valueStyle}>SMS</div>
-                  <div
-                    className="text-[#A6B5BB] font-Archivo text-[18px]"
-                    style={{ marginTop: "8px" }}
-                  >
-                    Receive verification codes via SMS
-                  </div>
-                </div>
-                <Switch id="sms-switch" />
-              </div>
-            </div>
-            <div style={{ marginBottom: "32px" }}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div style={valueStyle}>Authenticator App</div>
-                  <div
-                    className="text-[#A6B5BB] font-Archivo text-[18px]"
-                    style={{ marginTop: "8px" }}
-                  >
-                    Use an authenticator app for verification
-                  </div>
-                </div>
-                <Switch id="auth-app-switch" />
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div style={valueStyle}>Security Key</div>
-                  <div
-                    className="text-[#A6B5BB] font-Archivo text-[18px]"
-                    style={{ marginTop: "8px" }}
-                  >
-                    Use a security key for verification
-                  </div>
-                </div>
-                <Switch id="security-key-switch" />
-              </div>
-            </div>
-          </SettingsSection>
         </>
       )}
     </>

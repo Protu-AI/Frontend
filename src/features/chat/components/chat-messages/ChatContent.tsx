@@ -28,7 +28,7 @@ export function ChatContent() {
 
         // Make API request to fetch messages
         const response = await fetch(
-          `${config.apiUrl}/v1/chats/single/${currentSessionId}?page=1&limit=20`,
+          `${config.apiUrl}/v1/chats/single/${currentSessionId}?page=1&limit=50`,
           {
             method: "GET",
             headers: {
@@ -152,10 +152,7 @@ export function ChatContent() {
                 isVisible={!isTyping}
               />
             )}
-            <ChatInputContainer
-              onSendMessage={handleSendMessage}
-              isExpanded={isTyping}
-            />
+            <ChatInputContainer onSendMessage={handleSendMessage} />
           </div>
         </div>
       </div>

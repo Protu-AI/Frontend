@@ -1,14 +1,16 @@
-import { MainLayout } from "@/layouts/MainLayout";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { MainLayout } from "../../layouts/MainLayout";
 import { useNavigate } from "react-router-dom";
-import { config } from "../../../config"; // Make sure this path is correct
+import { toast } from "react-toastify"; // Assuming you have react-toastify for notifications
+import { config } from "../../../config";
 
+// Define interfaces for quiz and draft data (assuming API response structure)
 interface Quiz {
   id: string;
   title: string;
   topic: string;
-  duration: string;
-  date: string;
+  duration: string; // Or number, depending on API
+  dateTaken: string; // ISO string or similar
   score: number;
   status: "passed" | "failed";
 }
@@ -17,29 +19,46 @@ interface DraftQuiz {
   id: string;
   title: string;
   topic: string;
-  createdDate: string;
+  createdDate: string; // ISO string or similar
 }
 
-export function QuizHistory() {
-  const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState<"passed" | "failed">(
-    "passed"
-  );
-  const [showDrafts, setShowDrafts] = useState(false);
-  const [sortBy, setSortBy] = useState<"date" | "topic" | "score" | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface SummaryData {
+  totalQuizzes: number;
+  averageScore: number;
+  successRate: number;
+}
 
-  // State for API data
-  const [summaryData, setSummaryData] = useState({
+const PAGE_SIZE = 5;
+
+export default function QuizHistory() {
+  const navigate = useNavigate();
+
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [draftQuizzes, setDraftQuizzes] = useState<DraftQuiz[]>([]);
+  const [summaryData, setSummaryData] = useState<SummaryData>({
     totalQuizzes: 0,
     averageScore: 0,
     successRate: 0,
   });
-  const [passedQuizzes, setPassedQuizzes] = useState<Quiz[]>([]);
-  const [failedQuizzes, setFailedQuizzes] = useState<Quiz[]>([]);
-  const [draftQuizzes, setDraftQuizzes] = useState<DraftQuiz[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true); // New loading state
+
+  const [activeFilter, setActiveFilter] = useState<"passed" | "failed">(
+    "passed"
+  );
+  const [showDrafts, setShowDrafts] = useState<boolean>(false);
+
+  // Pagination states
+  const [quizPage, setQuizPage] = useState<number>(1);
+  const [draftPage, setDraftPage] = useState<number>(1);
+  const [hasMoreQuizzes, setHasMoreQuizzes] = useState<boolean>(true);
+  const [hasMoreDrafts, setHasMoreDrafts] = useState<boolean>(true);
+
+  // Sorting states
+  const [sortBy, setSortBy] = useState<"date" | "topic" | "score" | null>(
+    "date"
+  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   function formatDuration(
     dateIsoString: string,
@@ -64,9 +83,26 @@ export function QuizHistory() {
 
     return `${paddedHours}:${paddedMinutes}`;
   }
-  // Helper function to format date (ISO string to MMM dd, yyyy)
+
   const formatDate = (dateString: string) => {
+    // --- DEBUGGING LOGS ---
+    console.log("formatDate input:", { dateString, type: typeof dateString });
+
+    if (!dateString) {
+      console.warn("formatDate received empty or null string:", dateString);
+      return "N/A"; // Or any fallback text
+    }
+
     const date = new Date(dateString);
+    console.log("Date object created:", date); // Check if it's "Invalid Date" here
+
+    if (isNaN(date.getTime())) {
+      // Check if the date object is invalid
+      console.error("Invalid Date object created for string:", dateString);
+      return "Invalid Date"; // Return a specific error message for debugging
+    }
+    // --- END DEBUGGING LOGS ---
+
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -74,276 +110,386 @@ export function QuizHistory() {
     });
   };
 
-  const handleStartQuiz = (draftId: string) => {
-    navigate(`/quizzes/take/${draftId}`);
+  // Helper function to get the authorization token
+  const getAuthToken = () => {
+    return localStorage.getItem("token"); // Assuming token is stored here
   };
 
-  // Fetch dashboard summary
-  const fetchSummary = async () => {
-    try {
-      const token = localStorage.getItem("token");
+  const loadQuizzes = useCallback(
+    async (
+      filter: "passed" | "failed",
+      page: number,
+      pageSize: number,
+      sortByKey: string | null,
+      sortOrder: "asc" | "desc",
+      append: boolean = false
+    ) => {
+      setLoading(true);
+      setError(null);
+      const token = getAuthToken();
       if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      const response = await fetch(
-        `${config.apiUrl}/v1/quizzes/dashboard/summary`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch dashboard summary");
-      }
-
-      const data = await response.json();
-      setSummaryData({
-        totalQuizzes: data.data.totalQuizzes,
-        averageScore: Math.round(parseFloat(data.data.averageScore) * 10) / 10,
-        successRate: Math.round(parseFloat(data.data.successRate) * 10) / 10,
-      });
-    } catch (err) {
-      setError("Failed to load dashboard summary");
-      console.error(err);
-    }
-  };
-
-  // Fetch passed quizzes
-  const fetchPassedQuizzes = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      const response = await fetch(
-        `${config.apiUrl}/v1/quizzes/dashboard/passed?page=1&pageSize=10`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch passed quizzes");
-      }
-
-      const data = await response.json();
-      const formattedQuizzes = data.data.quizzes.map((quiz: any) => ({
-        id: quiz.id,
-        title: quiz.title,
-        topic: quiz.topic,
-        duration: formatDuration(quiz.dateTaken),
-        date: formatDate(quiz.dateTaken),
-        score: Math.round(parseFloat(quiz.score) * 10) / 10,
-        status: "passed" as const,
-      }));
-      setPassedQuizzes(formattedQuizzes);
-    } catch (err) {
-      setError("Failed to load passed quizzes");
-      console.error(err);
-    }
-  };
-
-  // Fetch failed quizzes
-  const fetchFailedQuizzes = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      const response = await fetch(
-        `${config.apiUrl}/v1/quizzes/dashboard/failed?page=1&pageSize=10`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch failed quizzes");
-      }
-
-      const data = await response.json();
-      const formattedQuizzes = data.data.quizzes.map((quiz: any) => ({
-        id: quiz.id,
-        title: quiz.title,
-        topic: quiz.topic,
-        duration: formatDuration(quiz.dateTaken),
-        date: formatDate(quiz.dateTaken),
-        score: Math.round(parseFloat(quiz.score) * 10) / 10,
-        status: "failed" as const,
-      }));
-      setFailedQuizzes(formattedQuizzes);
-    } catch (err) {
-      setError("Failed to load failed quizzes");
-      console.error(err);
-    }
-  };
-
-  // Fetch draft quizzes
-  const fetchDraftQuizzes = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      const response = await fetch(
-        `${config.apiUrl}/v1/quizzes/dashboard/drafts?page=1&pageSize=10`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch draft quizzes");
-      }
-
-      const data = await response.json();
-      const formattedDrafts = data.data.quizzes.map((draft: any) => ({
-        id: draft.id,
-        title: draft.title,
-        topic: draft.topic,
-        createdDate: formatDate(draft.dateTaken),
-      }));
-      setDraftQuizzes(formattedDrafts);
-    } catch (err) {
-      setError("Failed to load draft quizzes");
-      console.error(err);
-    }
-  };
-
-  // Delete a draft quiz
-  const handleDeleteDraft = async (quizId: string, quizTitle: string) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found. Please log in.");
-      }
-
-      // Confirmation dialog before deleting (replace with custom modal if needed)
-      if (!window.confirm(`Are you sure you want to delete "${quizTitle}"?`)) {
+        toast.error("Authentication token not found. Please log in.");
+        setLoading(false);
+        navigate("/login");
         return;
       }
 
-      const response = await fetch(`${config.apiUrl}/v1/quizzes/${quizId}`, {
-        method: "DELETE",
+      // Construct URL parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pageSize.toString(), // Use 'limit' if your backend expects it for page size
+        // Map frontend sort keys to backend keys if different
+        sortBy: sortByKey === "date" ? "dateTaken" : sortByKey || "dateTaken",
+        sortOrder: sortOrder,
+      });
+
+      const url = `${
+        config.apiUrl
+      }/v1/quizzes/dashboard/${filter}?${params.toString()}`;
+      console.log(`Fetching quizzes from: ${url}`); // DEBUG
+
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("API Error Response:", errorData); // DEBUG
+          throw new Error(errorData.message || "Failed to fetch quizzes");
+        }
+
+        const responseBody = await response.json(); // Get the full response body
+        console.log(`Full API response body for ${filter}:`, responseBody); // DEBUG
+
+        // --- IMPORTANT CHANGE HERE ---
+        // Access the 'data' property from the responseBody
+        const apiData = responseBody.data;
+
+        if (!apiData || !Array.isArray(apiData.quizzes)) {
+          console.error(
+            "API response 'data.quizzes' is not an array or missing 'data':",
+            apiData
+          ); // DEBUG
+          throw new Error(
+            "Invalid data format from API: quizzes array missing."
+          );
+        }
+
+        // Map API response fields to your frontend Quiz interface
+        const fetchedQuizzes: Quiz[] = apiData.quizzes.map((q: any) => ({
+          id: q.id, // Map 'id'
+          title: q.title,
+          topic: q.topic,
+          score: q.score,
+          dateTaken: q.dateTaken ? String(q.dateTaken) : "",
+          duration: formatDuration(q.dateTaken), // Convert timeTaken (seconds) to "X min"
+          status: q.score >= 70 ? "passed" : "failed", // Assuming 70% is passing
+        }));
+
+        // Determine hasMore based on pagination data
+        const hasMore =
+          apiData.pagination.currentPage < apiData.pagination.totalPages;
+
+        console.log(`Processed quizzes for UI:`, fetchedQuizzes); // DEBUG
+        console.log(`hasMore set to:`, hasMore); // DEBUG
+
+        if (append) {
+          setQuizzes((prev) => [...prev, ...fetchedQuizzes]);
+        } else {
+          setQuizzes(fetchedQuizzes);
+        }
+        setHasMoreQuizzes(hasMore);
+      } catch (err: any) {
+        console.error("Caught error during quiz fetch:", err); // DEBUG
+        setError(
+          err.message || "Failed to load quizzes. Please try again later."
+        );
+        toast.error(err.message || "Failed to load quizzes.");
+      } finally {
+        setLoading(false);
+        console.log("Loading set to false."); // DEBUG
+      }
+    },
+    [navigate]
+  );
+  const loadDraftQuizzes = useCallback(
+    async (
+      page: number,
+      pageSize: number,
+      sortByKey: string | null,
+      sortOrder: "asc" | "desc",
+      append: boolean = false
+    ) => {
+      setLoading(true);
+      setError(null);
+      const token = getAuthToken();
+      if (!token) {
+        toast.error("Authentication token not found. Please log in.");
+        setLoading(false);
+        navigate("/login");
+        return;
+      }
+
+      const actualSortByKey = sortByKey === "date" ? "createdDate" : sortByKey; // Map 'date' to 'createdDate'
+
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pageSize.toString(),
+      });
+      if (actualSortByKey) {
+        params.append("sortBy", actualSortByKey);
+      }
+      params.append("sortOrder", sortOrder);
+
+      const url = `${
+        config.apiUrl
+      }/v1/quizzes/dashboard/drafts?${params.toString()}`;
+      console.log(`Fetching draft quizzes from: ${url}`); // DEBUG
+
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("API Error Response for drafts:", errorData); // DEBUG
+          throw new Error(errorData.message || "Failed to fetch draft quizzes");
+        }
+
+        const responseBody = await response.json();
+        console.log("Full API response body for drafts:", responseBody); // DEBUG
+
+        // --- IMPORTANT CHANGE HERE FOR DRAFTS (IF APPLICABLE) ---
+        const apiData = responseBody.data; // Assuming drafts also have 'data' wrapper
+
+        if (!apiData || !Array.isArray(apiData.quizzes)) {
+          // Check for 'drafts' array
+          console.error(
+            "API response 'data.drafts' is not an array or missing 'data':",
+            apiData
+          ); // DEBUG
+          throw new Error(
+            "Invalid data format from API: drafts array missing."
+          );
+        }
+
+        const fetchedDrafts: DraftQuiz[] = apiData.quizzes.map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          topic: d.topic,
+          createdDate: d.createdDate,
+        }));
+
+        const hasMore =
+          apiData.pagination.currentPage < apiData.pagination.totalPages; // Assuming pagination for drafts too
+
+        console.log("Processed drafts for UI:", fetchedDrafts); // DEBUG
+        console.log("hasMoreDrafts set to:", hasMore); // DEBUG
+
+        if (append) {
+          setDraftQuizzes((prev) => [...prev, ...fetchedDrafts]);
+        } else {
+          setDraftQuizzes(fetchedDrafts);
+        }
+        setHasMoreDrafts(hasMore);
+      } catch (err: any) {
+        console.error("Caught error during draft fetch:", err); // DEBUG
+        setError(
+          err.message || "Failed to load draft quizzes. Please try again later."
+        );
+        toast.error(err.message || "Failed to load draft quizzes.");
+      } finally {
+        setLoading(false);
+        console.log("Loading set to false for drafts."); // DEBUG
+      }
+    },
+    [navigate]
+  );
+  const getSummaryData = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) {
+      toast.error("Authentication token not found. Please log in.");
+      navigate("/login");
+      return;
+    }
+
+    const url = `${config.apiUrl}/v1/quizzes/dashboard/summary`; // Assuming a summary endpoint
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title: quizTitle }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete draft quiz.");
+        throw new Error(errorData.message || "Failed to fetch summary data");
       }
 
       const data = await response.json();
-      console.log("Delete successful:", data.message);
-      // Optionally, refresh the draft quizzes list or remove the deleted quiz from state
-      setDraftQuizzes((prevDrafts) =>
-        prevDrafts.filter((draft) => draft.id !== quizId)
-      );
-      // You might also want to refetch the summary data if it's affected
-      fetchSummary();
+      setSummaryData(data.data); // Assuming data directly matches SummaryData interface
     } catch (err: any) {
-      console.error("Error deleting draft quiz:", err.message);
-      setError(`Error deleting quiz: ${err.message}`); // Set a user-friendly error message
+      console.error("Failed to fetch summary data:", err);
+      setError(
+        err.message || "Failed to load dashboard data. Please try again later."
+      );
+      toast.error(err.message || "Failed to load dashboard data.");
     }
-  };
+  }, [navigate]);
 
+  // Load initial quizzes and summary data on component mount or filter/sort change
   useEffect(() => {
-    const loadInitialData = async () => {
+    const fetchData = async () => {
       setLoading(true);
+      setError(null);
       try {
-        await fetchSummary();
-        await fetchPassedQuizzes();
+        await getSummaryData();
+        // Load quizzes for the initial active filter
+        setQuizPage(1); // Reset page to 1 when filter/sort changes
+        setHasMoreQuizzes(true); // Assume more until proven otherwise
+        loadQuizzes(activeFilter, 1, PAGE_SIZE, sortBy, sortDirection, false);
       } catch (err) {
-        setError("Failed to load initial data");
-        console.error(err);
+        // Error handling already in getSummaryData and loadQuizzes
       } finally {
-        setLoading(false);
+        setLoading(false); // Set loading to false after all initial fetches
       }
     };
+    fetchData();
+  }, [activeFilter, sortBy, sortDirection, loadQuizzes, getSummaryData]);
 
-    loadInitialData();
-  }, []);
-
-  useEffect(() => {
-    if (activeFilter === "passed") {
-      fetchPassedQuizzes();
-    } else {
-      fetchFailedQuizzes();
-    }
-  }, [activeFilter]);
-
+  // Load draft quizzes when showDrafts changes or draft sorting changes
   useEffect(() => {
     if (showDrafts) {
-      fetchDraftQuizzes();
+      setDraftPage(1); // Reset page to 1 when showing drafts or draft sort changes
+      setHasMoreDrafts(true); // Assume more until proven otherwise
+      // For drafts, 'date' sortBy maps to 'createdDate'
+      const draftSortBy =
+        sortBy === "score" ? null : sortBy === "date" ? "createdDate" : sortBy;
+      loadDraftQuizzes(1, PAGE_SIZE, draftSortBy, sortDirection, false);
+    } else {
+      setDraftQuizzes([]); // Clear drafts when not shown
     }
-  }, [showDrafts]);
+  }, [showDrafts, sortBy, sortDirection, loadDraftQuizzes]);
 
-  const handleSort = (type: "date" | "topic" | "score") => {
-    if (sortBy === type) {
+  const handleLoadMoreQuizzes = () => {
+    setQuizPage((prev) => prev + 1);
+    loadQuizzes(
+      activeFilter,
+      quizPage + 1,
+      PAGE_SIZE,
+      sortBy,
+      sortDirection,
+      true
+    );
+  };
+
+  const handleLoadMoreDrafts = () => {
+    setDraftPage((prev) => prev + 1);
+    // For drafts, 'date' sortBy maps to 'createdDate'
+    const draftSortBy =
+      sortBy === "score" ? null : sortBy === "date" ? "createdDate" : sortBy;
+    loadDraftQuizzes(
+      draftPage + 1,
+      PAGE_SIZE,
+      draftSortBy,
+      sortDirection,
+      true
+    );
+  };
+
+  const handleFilterChange = (filter: "passed" | "failed") => {
+    setActiveFilter(filter);
+    setShowDrafts(false); // Hide drafts when changing main filter
+    setQuizPage(1); // Reset page for quizzes
+    setHasMoreQuizzes(true);
+    // Data will be reloaded by useEffect
+  };
+
+  const handleToggleDrafts = () => {
+    setShowDrafts((prev) => !prev);
+    // Data will be reloaded by useEffect if drafts are shown
+  };
+
+  const handleSort = (key: "date" | "topic" | "score") => {
+    if (sortBy === key) {
+      // Toggle sort direction if clicking the same sort key
       setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
-      setSortBy(type);
+      // Set new sort key and default to descending
+      setSortBy(key);
       setSortDirection("desc");
     }
+    setQuizPage(1); // Reset page for quizzes
+    setDraftPage(1); // Reset page for drafts
+    setHasMoreQuizzes(true);
+    setHasMoreDrafts(true);
+    // Data will be reloaded by useEffect
   };
 
-  // Filter and sort quizzes
-  const getFilteredAndSortedQuizzes = () => {
-    let quizzes =
-      activeFilter === "passed" ? [...passedQuizzes] : [...failedQuizzes];
+  const handleStartQuiz = (id: string) => {
+    navigate(`/quizzes/take/${id}`);
+  };
 
-    if (sortBy) {
-      quizzes.sort((a, b) => {
-        let compareValue = 0;
+  const handleDeleteDraft = async (id: string, title: string) => {
+    if (window.confirm(`Are you sure you want to delete draft "${title}"?`)) {
+      const token = getAuthToken();
+      if (!token) {
+        toast.error("Authentication token not found. Please log in.");
+        navigate("/login");
+        return;
+      }
 
-        switch (sortBy) {
-          case "date":
-            const dateA = new Date(a.date).getTime();
-            const dateB = new Date(b.date).getTime();
-            compareValue = dateA - dateB;
-            break;
-          case "topic":
-            compareValue = a.topic.localeCompare(b.topic);
-            break;
-          case "score":
-            compareValue = a.score - b.score;
-            break;
+      try {
+        const response = await fetch(
+          `${config.apiUrl}/v1/quizzes/drafts/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to delete draft");
         }
 
-        return sortDirection === "asc" ? compareValue : -compareValue;
-      });
+        toast.success(`Draft "${title}" deleted successfully!`);
+        // Re-fetch drafts to update the list and handle pagination correctly
+        const draftSortBy =
+          sortBy === "score"
+            ? null
+            : sortBy === "date"
+            ? "createdDate"
+            : sortBy;
+        loadDraftQuizzes(
+          draftPage,
+          PAGE_SIZE,
+          draftSortBy,
+          sortDirection,
+          false
+        );
+      } catch (err: any) {
+        console.error("Failed to delete draft:", err);
+        toast.error(err.message || "Failed to delete draft.");
+      }
     }
-
-    return quizzes;
   };
-
-  const filteredQuizzes = getFilteredAndSortedQuizzes();
-
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="flex justify-center items-center h-full">
-          <p>Loading...</p>
-        </div>
-      </MainLayout>
-    );
-  }
 
   if (error) {
     return (
@@ -516,7 +662,7 @@ export function QuizHistory() {
               Average Score
             </h3>
             <p className="font-['Archivo'] text-[48px] font-semibold text-[#FFBF00] text-left">
-              {summaryData.averageScore}%
+              {summaryData.averageScore.toFixed(2)}%
             </p>
           </div>
 
@@ -562,7 +708,7 @@ export function QuizHistory() {
               Success Rate
             </h3>
             <p className="font-['Archivo'] text-[48px] font-semibold text-[#52D999] text-left">
-              {summaryData.successRate}%
+              {summaryData.successRate.toFixed(2)}%
             </p>
           </div>
         </div>
@@ -586,7 +732,7 @@ export function QuizHistory() {
               {/* Passed/Failed Toggle Group */}
               <div className="flex">
                 <button
-                  onClick={() => setActiveFilter("passed")}
+                  onClick={() => handleFilterChange("passed")}
                   className={`font-['Archivo'] text-[16px] font-semibold text-center py-[16px] px-[24px] rounded-l-[16px] transition-colors duration-200 ${
                     activeFilter === "passed"
                       ? "bg-[#5F24E0] text-[#EFE9FC]"
@@ -596,7 +742,7 @@ export function QuizHistory() {
                   Passed
                 </button>
                 <button
-                  onClick={() => setActiveFilter("failed")}
+                  onClick={() => handleFilterChange("failed")}
                   className={`font-['Archivo'] text-[16px] font-semibold text-center py-[16px] px-[24px] rounded-r-[16px] transition-colors duration-200 ${
                     activeFilter === "failed"
                       ? "bg-[#5F24E0] text-[#EFE9FC]"
@@ -609,7 +755,7 @@ export function QuizHistory() {
 
               {/* Drafts Button */}
               <button
-                onClick={() => setShowDrafts(!showDrafts)}
+                onClick={handleToggleDrafts}
                 className={`font-['Archivo'] text-[16px] font-semibold text-center py-[16px] px-[24px] rounded-[16px] transition-colors duration-200 ${
                   showDrafts
                     ? "bg-[#5F24E0] text-[#EFE9FC]"
@@ -702,268 +848,287 @@ export function QuizHistory() {
                 )}
               </button>
 
-              {/* Score Sort */}
-              <button
-                onClick={() => handleSort("score")}
-                className={`font-['Archivo'] text-[20px] font-medium text-left flex items-center gap-[4px] transition-colors duration-200 ${
-                  sortBy === "score" ? "text-[#5F24E0]" : "text-[#A6B5BB]"
-                }`}
-              >
-                Score
-                {sortBy === "score" && (
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-[#5F24E0]"
-                    strokeWidth="2"
-                  >
-                    {sortDirection === "asc" ? (
-                      <path
-                        d="M7 14L12 9L17 14"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    ) : (
-                      <path
-                        d="M7 10L12 15L17 10"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    )}
-                  </svg>
-                )}
-              </button>
+              {/* Score Sort (only applicable for completed quizzes) */}
+              {!showDrafts && (
+                <button
+                  onClick={() => handleSort("score")}
+                  className={`font-['Archivo'] text-[20px] font-medium text-left flex items-center gap-[4px] transition-colors duration-200 ${
+                    sortBy === "score" ? "text-[#5F24E0]" : "text-[#A6B5BB]"
+                  }`}
+                >
+                  Score
+                  {sortBy === "score" && (
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="text-[#5F24E0]"
+                      strokeWidth="2"
+                    >
+                      {sortDirection === "asc" ? (
+                        <path
+                          d="M7 14L12 9L17 14"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      ) : (
+                        <path
+                          d="M7 10L12 15L17 10"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      )}
+                    </svg>
+                  )}
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Quiz List */}
-          <div className="space-y-[16px]">
-            {filteredQuizzes.length > 0 ? (
-              filteredQuizzes.map((quiz) => (
-                <div
-                  key={quiz.id}
-                  className="w-full p-[24px] rounded-[16px] border border-[#A6B5BB] flex justify-between items-center"
-                >
-                  {/* Left Side - Title and Tags */}
-                  <div className="flex flex-col">
-                    {/* Quiz Title */}
-                    <h3 className="font-['Archivo'] text-[32px] font-medium text-[#1C0B43] text-left mb-[20px]">
-                      {quiz.title}
-                    </h3>
+          {/* Quiz List (Passed/Failed) */}
+          {!showDrafts && (
+            <div className="space-y-[16px]">
+              {loading && quizzes.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Loading quizzes...
+                </div>
+              ) : quizzes && quizzes.length > 0 ? (
+                quizzes.map((quiz) => (
+                  <div
+                    key={quiz.id}
+                    className="w-full p-[24px] rounded-[16px] border border-[#A6B5BB] flex justify-between items-center"
+                  >
+                    {/* Left Side - Title and Tags */}
+                    <div className="flex flex-col">
+                      {/* Quiz Title */}
+                      <h3 className="font-['Archivo'] text-[32px] font-medium text-[#1C0B43] text-left mb-[20px]">
+                        {quiz.title}
+                      </h3>
 
-                    {/* Tags */}
-                    <div className="flex items-center gap-[20px]">
-                      {/* Topic Tag */}
-                      <div className="flex items-center gap-[8px] bg-[#EFE9FC] rounded-[16px] py-[4px] px-[12px]">
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="text-[#1C0B43]"
-                          strokeWidth="2"
+                      {/* Tags */}
+                      <div className="flex items-center gap-[20px]">
+                        {/* Topic Tag */}
+                        <div className="flex items-center gap-[8px] bg-[#EFE9FC] rounded-[16px] py-[4px] px-[12px]">
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="text-[#1C0B43]"
+                            strokeWidth="2"
+                          >
+                            <path
+                              d="M9 12L11 14L15 10"
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          <span className="font-['Archivo'] text-[18px] font-medium text-[#1C0B43] text-left">
+                            {quiz.topic}
+                          </span>
+                        </div>
+
+                        {/* Duration Tag */}
+                        <div className="flex items-center gap-[8px] bg-[#EFE9FC] rounded-[16px] py-[4px] px-[12px]">
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="text-[#1C0B43]"
+                            strokeWidth="2"
+                          >
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M12 6V12L16 14"
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          <span className="font-['Archivo'] text-[18px] font-medium text-[#1C0B43] text-left">
+                            {quiz.duration}
+                          </span>
+                        </div>
+
+                        {/* Date Tag */}
+                        <div className="flex items-center gap-[8px] bg-[#EFE9FC] rounded-[16px] py-[4px] px-[12px]">
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="text-[#1C0B43]"
+                            strokeWidth="2"
+                          >
+                            <rect
+                              x="3"
+                              y="4"
+                              width="18"
+                              height="18"
+                              rx="2"
+                              ry="2"
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <line
+                              x1="16"
+                              y1="2"
+                              x2="16"
+                              y2="6"
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <line
+                              x1="8"
+                              y1="2"
+                              x2="8"
+                              y2="6"
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <line
+                              x1="3"
+                              y1="10"
+                              x2="21"
+                              y2="10"
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          <span className="font-['Archivo'] text-[18px] font-medium text-[#1C0B43] text-left">
+                            {formatDate(quiz.dateTaken)}
+                            {/* Format date */}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Right Side - Buttons and Grade */}
+                    <div className="flex items-center gap-[24px]">
+                      {/* Grade */}
+                      <div className="flex flex-col items-center">
+                        <p
+                          className={`font-['Archivo'] text-[32px] font-semibold text-center mb-[2px] ${
+                            quiz.status === "passed"
+                              ? "text-[#52D999]"
+                              : "text-[#870056]"
+                          }`}
                         >
-                          <path
-                            d="M9 12L11 14L15 10"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <span className="font-['Archivo'] text-[18px] font-medium text-[#1C0B43] text-left">
-                          {quiz.topic}
-                        </span>
+                          {quiz.score.toFixed(1)}%
+                        </p>
+                        <p
+                          className={`font-['Archivo'] text-[22px] font-semibold text-center ${
+                            quiz.status === "passed"
+                              ? "text-[#52D999]"
+                              : "text-[#870056]"
+                          }`}
+                        >
+                          {quiz.status === "passed" ? "Passed" : "Failed"}
+                        </p>
                       </div>
 
-                      {/* Duration Tag */}
-                      <div className="flex items-center gap-[8px] bg-[#EFE9FC] rounded-[16px] py-[4px] px-[12px]">
+                      {/* Preview Button */}
+                      <button className="p-[12px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group">
                         <svg
-                          width="18"
-                          height="18"
+                          width="22"
+                          height="22"
                           viewBox="0 0 24 24"
                           fill="none"
                           xmlns="http://www.w3.org/2000/svg"
-                          className="text-[#1C0B43]"
+                          className="text-[#5F24E0] group-hover:text-[#EFE9FC]"
                           strokeWidth="2"
                         >
+                          <path
+                            d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                           <circle
                             cx="12"
                             cy="12"
-                            r="10"
+                            r="3"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Retry Button */}
+                      <button
+                        onClick={() => navigate(`/quizzes/take/${quiz.id}`)} // Use _id for navigation
+                        className="p-[12px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group"
+                      >
+                        <svg
+                          width="22"
+                          height="22"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="text-[#5F24E0] group-hover:text-[#EFE9FC]"
+                          strokeWidth="2"
+                        >
+                          <path
+                            d="M1 4V10H7"
                             stroke="currentColor"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                           <path
-                            d="M12 6V12L16 14"
+                            d="M3.51 15A9 9 0 1 0 6 5L1 10"
                             stroke="currentColor"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                         </svg>
-                        <span className="font-['Archivo'] text-[18px] font-medium text-[#1C0B43] text-left">
-                          {quiz.duration}
-                        </span>
-                      </div>
-
-                      {/* Date Tag */}
-                      <div className="flex items-center gap-[8px] bg-[#EFE9FC] rounded-[16px] py-[4px] px-[12px]">
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="text-[#1C0B43]"
-                          strokeWidth="2"
-                        >
-                          <rect
-                            x="3"
-                            y="4"
-                            width="18"
-                            height="18"
-                            rx="2"
-                            ry="2"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <line
-                            x1="16"
-                            y1="2"
-                            x2="16"
-                            y2="6"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <line
-                            x1="8"
-                            y1="2"
-                            x2="8"
-                            y2="6"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <line
-                            x1="3"
-                            y1="10"
-                            x2="21"
-                            y2="10"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <span className="font-['Archivo'] text-[18px] font-medium text-[#1C0B43] text-left">
-                          {quiz.date}
-                        </span>
-                      </div>
+                      </button>
                     </div>
                   </div>
-
-                  {/* Right Side - Buttons and Grade */}
-                  <div className="flex items-center gap-[24px]">
-                    {/* Grade */}
-                    <div className="flex flex-col items-center">
-                      <p
-                        className={`font-['Archivo'] text-[32px] font-semibold text-center mb-[2px] ${
-                          quiz.status === "passed"
-                            ? "text-[#52D999]"
-                            : "text-[#870056]"
-                        }`}
-                      >
-                        {quiz.score}%
-                      </p>
-                      <p
-                        className={`font-['Archivo'] text-[22px] font-semibold text-center ${
-                          quiz.status === "passed"
-                            ? "text-[#52D999]"
-                            : "text-[#870056]"
-                        }`}
-                      >
-                        {quiz.status === "passed" ? "Passed" : "Failed"}
-                      </p>
-                    </div>
-
-                    {/* Preview Button */}
-                    <button className="p-[12px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group">
-                      <svg
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="text-[#5F24E0] group-hover:text-[#EFE9FC]"
-                        strokeWidth="2"
-                      >
-                        <path
-                          d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z"
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <circle
-                          cx="12"
-                          cy="12"
-                          r="3"
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-
-                    {/* Retry Button */}
-                    <button
-                      onClick={() => navigate(`/quizzes/take/${quiz.id}`)}
-                      className="p-[12px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group"
-                    >
-                      <svg
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="text-[#5F24E0] group-hover:text-[#EFE9FC]"
-                        strokeWidth="2"
-                      >
-                        <path
-                          d="M1 4V10H7"
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M3.51 15A9 9 0 1 0 6 5L1 10"
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No quizzes found for {activeFilter} quizzes
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                No quizzes found for {activeFilter} quizzes
-              </div>
-            )}
-          </div>
+              )}
+              {hasMoreQuizzes && (
+                <div className="flex justify-center mt-4">
+                  <button
+                    onClick={handleLoadMoreQuizzes}
+                    disabled={loading}
+                    className="py-[12px] px-[24px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 font-['Archivo'] text-[16px] font-semibold text-center text-[#5F24E0] hover:text-[#EFE9FC] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Loading..." : "Load More Quizzes"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Draft Quizzes Section - Show when showDrafts is true */}
           {showDrafts && (
@@ -981,10 +1146,14 @@ export function QuizHistory() {
 
               {/* Draft Quiz List */}
               <div className="space-y-[16px]">
-                {draftQuizzes.length > 0 ? (
+                {loading && draftQuizzes.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Loading draft quizzes...
+                  </div>
+                ) : draftQuizzes && draftQuizzes.length > 0 ? (
                   draftQuizzes.map((draft) => (
                     <div
-                      key={draft.id}
+                      key={draft.id} // Use _id from API
                       className="w-full p-[24px] rounded-[16px] border border-[#A6B5BB] flex justify-between items-center"
                     >
                       {/* Left Side - Title and Tags */}
@@ -1076,7 +1245,8 @@ export function QuizHistory() {
                               />
                             </svg>
                             <span className="font-['Archivo'] text-[18px] font-medium text-[#1C0B43] text-left">
-                              Created: {draft.createdDate}
+                              Created: {formatDate(draft.createdDate)}
+                              {/* Format date */}
                             </span>
                           </div>
                         </div>
@@ -1086,7 +1256,7 @@ export function QuizHistory() {
                       <div className="flex items-center gap-[24px]">
                         {/* Start Button */}
                         <button
-                          onClick={() => handleStartQuiz(draft.id)}
+                          onClick={() => navigate(`/quizzes/take/${draft.id}`)} // Use _id for navigation
                           className="py-[12px] px-[24px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group"
                         >
                           <span className="font-['Archivo'] text-[16px] font-semibold text-center text-[#5F24E0] group-hover:text-[#EFE9FC]">
@@ -1130,6 +1300,17 @@ export function QuizHistory() {
                 ) : (
                   <div className="text-center py-8 text-gray-500">
                     No draft quizzes found
+                  </div>
+                )}
+                {hasMoreDrafts && (
+                  <div className="flex justify-center mt-4">
+                    <button
+                      onClick={handleLoadMoreDrafts}
+                      disabled={loading}
+                      className="py-[12px] px-[24px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 font-['Archivo'] text-[16px] font-semibold text-center text-[#5F24E0] hover:text-[#EFE9FC] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? "Loading..." : "Load More Drafts"}
+                    </button>
                   </div>
                 )}
               </div>

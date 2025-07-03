@@ -30,7 +30,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
     <div
       className={cn(
         "flex w-full mb-4",
-        isBot ? "justify-start" : "justify-end pr-4"
+        isBot ? "justify-start pl-20" : "justify-end pr-20"
       )}
     >
       {isBot && (

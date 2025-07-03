@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { QuizDashboard } from "./QuizDashboard";
-import { QuizHistory } from "./QuizHistory";
+import QuizHistory from "./QuizHistory";
 import { config } from "../../../config";
 
 // Export the QuizGenerator for easy importing

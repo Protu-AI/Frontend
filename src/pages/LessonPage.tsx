@@ -48,9 +48,27 @@ const LessonContext = React.createContext<{
 });
 
 const components = {
+  h1: ({ node, ...props }) => (
+    <h2
+      className="font-['Archivo'] font-medium text-[40px] text-[#5F24E0] text-left mt-0 mb-[24px]"
+      {...props}
+    />
+  ),
+  h2: ({ node, ...props }) => (
+    <h2
+      className="font-['Archivo'] font-medium text-[22px] text-[#5F24E0] text-left mt-0 mb-[24px]"
+      {...props}
+    />
+  ),
   h3: ({ node, ...props }) => (
     <h2
-      className="font-['Archivo'] font-medium text-[32px] text-[#5F24E0] text-left mt-0 mb-[24px]"
+      className="font-['Archivo'] font-medium text-[32px] text-[#5F24E0] text-left mt-0 mb-[20px]"
+      {...props}
+    />
+  ),
+  h4: ({ node, ...props }) => (
+    <h2
+      className="font-['Archivo'] font-medium text-[25px] text-[#5F24E0] text-left mt-0 mb-[24px]"
       {...props}
     />
   ),
@@ -59,7 +77,7 @@ const components = {
   ),
   p: ({ node, ...props }) => (
     <p
-      className="font-['Archivo'] font-medium text-[16px] text-[#1C0B43] text-left leading-[1.6] mt-0 mb-[24px]"
+      className="font-['Archivo'] font-medium text-[20px] text-[#1C0B43] text-left leading-[1.6] mt-0 mb-[24px]"
       {...props}
     />
   ),

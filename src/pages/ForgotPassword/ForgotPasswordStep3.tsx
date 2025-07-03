@@ -103,7 +103,7 @@ export function ForgotPasswordStep3({
         Create a New Password
       </motion.h1>
       <motion.p
-        className="font-['Archivo'] text-base text-[#A6B5BB] text-center mt-[8px]"
+        className="font-['Archivo'] text-base text-[#A6B5BB] text-center mt-[8px] mb-[32px]"
         variants={fadeIn}
         initial="initial"
         animate="animate"
