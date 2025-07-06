@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { MainLayout } from "@/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,6 @@ import { Link } from "react-router-dom";
 import { config } from "@/../config";
 
 export function Learn() {
-  const { theme } = useTheme();
   const [tracks, setTracks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -189,6 +187,18 @@ function CoursePath({ track }: CoursePathProps) {
     // .replace(/[^\w-]+/g, "");
   };
 
+  function getTextStartingFrom(
+    fullText: string,
+    searchTerm: string
+  ): string | null {
+    const startIndex = fullText.indexOf(searchTerm);
+
+    if (startIndex !== -1) {
+      return "This " + fullText.substring(startIndex);
+    }
+    return null;
+  }
+
   const pathSlug = slugify(track.name);
 
   return (
@@ -203,7 +213,8 @@ function CoursePath({ track }: CoursePathProps) {
         {track.name}
       </h3>
       <p className="font-['Archivo'] text-[16px] text-[#ABABAB] mt-[16px] flex-grow">
-        {track.description || "No description available"}
+        {getTextStartingFrom(track.description, "track") ||
+          "No description available"}
       </p>
       <div style={{ height: "32px" }}></div>
       <Link to={`/path/${pathSlug}`}>

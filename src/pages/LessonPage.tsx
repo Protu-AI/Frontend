@@ -135,6 +135,11 @@ const components = {
           <button
             className="bg-[#5F24E0] text-[#EFE9FC] font-['Archivo'] text-[18px] font-semibold rounded-[16px] py-[12px] px-[24px] transition-colors duration-200 hover:bg-[#9F7CEC]"
             onClick={() => handleRunCode(codeKey, codeContent, language)}
+            disabled={
+              !["java", "python", "cpp", "javascript", "html"].includes(
+                language
+              )
+            }
           >
             Run
           </button>
@@ -154,7 +159,6 @@ const LessonPage = () => {
   const { lessonId } = useParams();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { user } = useAuth();
-  // Updated state type for codeOutputs
   const [codeOutputs, setCodeOutputs] = useState<{
     [key: string]: { display: string; time?: string };
   }>({});
@@ -165,9 +169,8 @@ const LessonPage = () => {
   const location = useLocation();
 
   // Get lessons array and courseName from navigation state
-  const { lessons: courseLessons = [], courseName } = location.state || {};
+  const { lessons: courseLessons = [], course } = location.state || {};
   const [currentLessonIndex, setCurrentLessonIndex] = useState(-1);
-
   useEffect(() => {
     const fetchLesson = async () => {
       try {
@@ -199,7 +202,7 @@ const LessonPage = () => {
       if (!token || !user) return false;
 
       const response = await fetch(
-        `${config.apiUrl}/v1/progress/courses/${courseName}/lessons/${lesson.name}/completed`,
+        `${config.apiUrl}/v1/progress/courses/${course.name}/lessons/${lesson.name}/completed`,
         {
           method: "POST",
           headers: {
@@ -228,17 +231,19 @@ const LessonPage = () => {
       navigate(`/lesson/${nextLesson.name}`, {
         state: {
           lessons: courseLessons,
-          courseName,
+          course: course,
         },
       });
     } else {
       // No more lessons - return to course page
-      navigate(`/course/${courseName}`);
+      navigate(`/course/${course.name}`);
     }
   };
 
   const handleViewCourseClick = () => {
-    navigate(courseName ? `/course/${courseName}` : "/");
+    navigate(course.name ? `/course/${course.name}` : "/", {
+      state: { course: course },
+    });
   };
 
   const handleRunCode = async (key: string, code: string, language: string) => {

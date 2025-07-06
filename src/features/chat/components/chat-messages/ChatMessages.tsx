@@ -18,7 +18,6 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
   return (
     <div className="flex flex-col space-y-6">
       {" "}
-      {/* Removed pb-[50px] and px-[155px] */}
       {messages.map((message) => (
         <ChatMessage key={message.id} message={message} />
       ))}

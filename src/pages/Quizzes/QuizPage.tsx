@@ -343,20 +343,13 @@ export function QuizPage() {
       const result = await response.json();
       console.log("Quiz submission successful:", result.data);
 
-      // Save aiFeedback for later use
-      if (result.data && result.data.aiFeedback) {
-        localStorage.setItem("quizAiFeedback", result.data.aiFeedback);
-        localStorage.setItem("quizResult", JSON.stringify(result.data)); // Save entire result if needed
-      }
-      navigate(`/quizzes`);
-      // Navigate to a feedback/results page, passing relevant data if needed
-      // navigate(`/quizzes/result/${attemptId}`); // Example: Navigate to a results  or feedback page or whatever
+      // Navigate to the QuizFeedback page and pass the result data as state
+      navigate("/quizzes/feedback", { state: { quizResult: result.data } });
     } catch (error) {
       console.error("Error submitting quiz:", error);
       alert("An error occurred while submitting the quiz. Please try again.");
     }
   };
-
   // Timer countdown effect
   useEffect(() => {
     if (timeLeft > 0 && quizData.length > 0) {

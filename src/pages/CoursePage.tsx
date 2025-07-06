@@ -24,6 +24,18 @@ const CoursePage = () => {
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const course = location.state?.course;
 
+  function getTextStartingFrom(
+    fullText: string,
+    searchTerm: string
+  ): string | null {
+    const startIndex = fullText.indexOf(searchTerm);
+
+    if (startIndex !== -1) {
+      return fullText.substring(startIndex);
+    }
+    return null;
+  }
+
   useEffect(() => {
     if (!courseName) {
       setError("No course specified");
@@ -43,7 +55,7 @@ const CoursePage = () => {
           // 1. Send POST request for enrollment
           try {
             const enrollResponse = await fetch(
-              `${config.apiUrl}/v1/progress/courses/${courseName}/enrollments`,
+              `${config.apiUrl}/v1/progress/courses/${course.name}/enrollments`,
               {
                 method: "POST",
                 headers: {
@@ -55,9 +67,6 @@ const CoursePage = () => {
 
             if (!enrollResponse.ok) {
               const errorData = await enrollResponse.json();
-              // If the user is already enrolled, the backend might return a 409 Conflict or similar.
-              // You might want to handle this gracefully, e.g., by not throwing an error
-              // if the message indicates already enrolled.
               if (
                 enrollResponse.status === 409 &&
                 errorData.message &&
@@ -83,7 +92,7 @@ const CoursePage = () => {
 
           // 2. Fetch lessons with progress
           response = await fetch(
-            `${config.apiUrl}/v1/courses/${courseName}/lessons/progress`,
+            `${config.apiUrl}/v1/courses/${course.name}/lessons/progress`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -109,7 +118,7 @@ const CoursePage = () => {
         } else {
           // Unauthenticated request (original behavior)
           response = await fetch(
-            `${config.apiUrl}/v1/courses/${courseName}/lessons`
+            `${config.apiUrl}/v1/courses/${course.name}/lessons`
           );
 
           if (!response.ok) {
@@ -152,7 +161,7 @@ const CoursePage = () => {
     };
 
     fetchLessons();
-  }, [courseName, user]);
+  }, [course.name, user]);
 
   const formatCourseName = (courseName: string) => {
     return courseName
@@ -162,14 +171,14 @@ const CoursePage = () => {
       .join(" ");
   };
 
-  const courseTitle = formatCourseName(courseName || "");
+  const courseTitle = formatCourseName(course.name || "");
 
   const handleLessonClick = (lesson: Lesson) => {
     // In CoursePage.tsx
     navigate(`/lesson/${lesson.name}`, {
       state: {
         lessons: lessons,
-        courseName: courseName,
+        course: course,
       },
     });
   };
@@ -249,7 +258,8 @@ const CoursePage = () => {
             <div className="h-[64px]"></div>
 
             <div className="w-[1000px] font-['Archivo'] text-[24px] font-normal text-[#EFE9FC] text-left">
-              {course?.description || "No course description available"}
+              {getTextStartingFrom(course?.description, "This course") ||
+                "No course description available"}
             </div>
 
             <div className="h-[32px]"></div>

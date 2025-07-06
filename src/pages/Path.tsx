@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { MainLayout } from "@/layouts/MainLayout";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { config } from "@/../config";
 
@@ -9,6 +9,7 @@ interface Course {
   name: string;
   description: string;
   lessons: any[];
+  totalLessons?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,6 +21,18 @@ export function Path() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [trackName, setTrackName] = useState("");
+
+  function getTextStartingFrom(
+    fullText: string,
+    searchTerm: string
+  ): string | null {
+    const startIndex = fullText.indexOf(searchTerm);
+
+    if (startIndex !== -1) {
+      return fullText.substring(startIndex);
+    }
+    return null;
+  }
 
   useEffect(() => {
     if (!pathName) {
@@ -55,8 +68,18 @@ export function Path() {
 
   const CourseItem = ({ course }: { course: Course }) => {
     const courseName = course.name;
-    const lessonsCount = course.lessons?.length || 0;
-    const durationHours = Math.ceil(lessonsCount * 0.5);
+
+    function getTextStartingFrom(
+      fullText: string,
+      searchTerm: string
+    ): string | null {
+      const startIndex = fullText.indexOf(searchTerm);
+
+      if (startIndex !== -1) {
+        return fullText.substring(startIndex);
+      }
+      return null;
+    }
 
     return (
       <div className="w-[1500px] rounded-[32px] shadow-[0_2px_6px_rgba(0,0,0,0.2)] mb-[64px] p-[32px]">
@@ -81,18 +104,7 @@ export function Path() {
                       className="ml-2 font-['Archivo'] font-semibold text-[16px]"
                       style={{ color: "#A6B5BB" }}
                     >
-                      {lessonsCount} Lessons
-                    </span>
-                    <img
-                      src="https://img.icons8.com/ios-filled/16/A6B5BB/timer.png"
-                      alt="Timer Icon"
-                      className="ml-4 h-[16px]"
-                    />
-                    <span
-                      className="ml-2 font-['Archivo'] font-semibold text-[16px]"
-                      style={{ color: "#A6B5BB" }}
-                    >
-                      {durationHours} hours
+                      {course.totalLessons} Lessons
                     </span>
                   </div>
                 </div>
@@ -112,7 +124,8 @@ export function Path() {
           className="mt-[32px] font-['Archivo'] text-[24px]"
           style={{ color: "#ABABAB", textAlign: "left" }}
         >
-          {course.description || "No description available"}
+          {getTextStartingFrom(course.description, "This course") ||
+            "No description available"}
         </div>
       </div>
     );

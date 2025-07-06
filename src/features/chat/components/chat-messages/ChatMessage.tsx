@@ -29,14 +29,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
   return (
     <div
       className={cn(
-        "flex w-full mb-4",
-        isBot ? "justify-start pl-20" : "justify-end pr-20"
+        "flex w-full mb-4 ",
+        isBot ? "justify-start pl-10" : "justify-end pr-10"
       )}
     >
       {isBot && (
-        <div className="mr-[12px] shrink-0 self-start mt-1 pl-4">
-          <div className="h-10 w-10 rounded-full border border-[#A6B5BB] dark:border-[#BFA7F3] flex items-center justify-center bg-transparent p-[9px]">
-            <Sparkles className="h-full w-full text-[#5F24E0] dark:text-[#EFE9FC]" />
+        <div className="mr-[20px] shrink-0 self-start mt-1 pl-2">
+          <div className="h-10 w-10 rounded-full border border-[#A6B5BB] flex items-center justify-center bg-transparent p-[9px]">
+            <Sparkles className="h-full w-full text-[#5F24E0]" />
           </div>
         </div>
       )}

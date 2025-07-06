@@ -19,7 +19,7 @@ interface DraftQuiz {
   id: string;
   title: string;
   topic: string;
-  createdDate: string; // ISO string or similar
+  dateTaken: string; // ISO string or similar
 }
 
 interface SummaryData {
@@ -235,7 +235,7 @@ export default function QuizHistory() {
         return;
       }
 
-      const actualSortByKey = sortByKey === "date" ? "createdDate" : sortByKey; // Map 'date' to 'createdDate'
+      const actualSortByKey = sortByKey === "date" ? "dateTaken" : sortByKey; // Map 'date' to 'createdDate'
 
       const params = new URLSearchParams({
         page: page.toString(),
@@ -287,7 +287,7 @@ export default function QuizHistory() {
           id: d.id,
           title: d.title,
           topic: d.topic,
-          createdDate: d.createdDate,
+          dateTaken: d.dateTaken,
         }));
 
         const hasMore =
@@ -453,16 +453,13 @@ export default function QuizHistory() {
       }
 
       try {
-        const response = await fetch(
-          `${config.apiUrl}/v1/quizzes/drafts/${id}`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`${config.apiUrl}/v1/quizzes/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -1153,7 +1150,7 @@ export default function QuizHistory() {
                 ) : draftQuizzes && draftQuizzes.length > 0 ? (
                   draftQuizzes.map((draft) => (
                     <div
-                      key={draft.id} // Use _id from API
+                      key={draft.id}
                       className="w-full p-[24px] rounded-[16px] border border-[#A6B5BB] flex justify-between items-center"
                     >
                       {/* Left Side - Title and Tags */}
@@ -1245,7 +1242,7 @@ export default function QuizHistory() {
                               />
                             </svg>
                             <span className="font-['Archivo'] text-[18px] font-medium text-[#1C0B43] text-left">
-                              Created: {formatDate(draft.createdDate)}
+                              Created: {formatDate(draft.dateTaken)}
                               {/* Format date */}
                             </span>
                           </div>

@@ -13,8 +13,8 @@ export function ChatInputContainer({
   return (
     <div
       className={cn(
-        "transition-all duration-500 ease-in-out mb-[32px] w-[1100px] mt-[32px]",
-        className // Apply the className prop
+        "transition-all duration-500 ease-in-out mb-[32px] w-[1150px] mt-[32px]",
+        className
       )}
     >
       <ChatInput onSendMessage={onSendMessage} />

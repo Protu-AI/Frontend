@@ -138,7 +138,7 @@ export function LessonChatWindow({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="w-[592px] h-[calc(100%-32px)] bg-[#EFE9FC] dark:bg-[#BFA7F3]/80 rounded-[32px] shadow-[0px_2px_6px_rgba(0,0,0,0.2)] p-[32px] mr-[128px] flex flex-col relative transition-colors duration-1000"
+          className="w-[800px] h-[calc(100%-16px)] bg-[#EFE9FC] rounded-[32px] shadow-[0px_2px_6px_rgba(0,0,0,0.2)] p-[32px] mr-[128px] flex flex-col relative transition-colors duration-1000"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 50 }}
@@ -168,7 +168,7 @@ export function LessonChatWindow({
           </div>
 
           {/* Input Area */}
-          <div className="flex-none mt-[32px]">
+          <div className="flex-none mt-[8px]">
             <ChatInputContainer
               onSendMessage={handleSendMessage}
               className="w-full"

@@ -361,18 +361,6 @@ const ContactInfo: React.FC = () => {
           }}
         >
           <SettingsHeading>Profile Information</SettingsHeading>
-          <div
-            style={{ ...editButtonStyle }}
-            onMouseEnter={(e) => {
-              Object.assign(e.currentTarget.style, editButtonHoverStyle);
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.currentTarget.style, editButtonStyle);
-            }}
-          >
-            Edit
-            <Pencil size={14} fill="#A6B5BB" color="#A6B5BB" />
-          </div>
         </div>
         <div
           className="grid grid-cols-2 gap-y-8"
