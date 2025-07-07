@@ -5,9 +5,7 @@ A modern, interactive learning platform powered by AI.
 ## Features
 
 - 🎓 Personalized Learning Experience
-- 🌙 Dark/Light Mode
 - 🔐 Secure Authentication
-- 📱 Responsive Design
 - ⚡ Optimized Performance
 
 ## Tech Stack
@@ -16,10 +14,8 @@ A modern, interactive learning platform powered by AI.
 - TypeScript
 - Vite
 - TanStack Query
-- Zustand
 - Framer Motion
 - Tailwind CSS
-- Vitest
 
 ## Getting Started
 
