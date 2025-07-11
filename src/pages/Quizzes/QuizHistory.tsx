@@ -110,9 +110,8 @@ export default function QuizHistory() {
     });
   };
 
-  // Helper function to get the authorization token
   const getAuthToken = () => {
-    return localStorage.getItem("token"); // Assuming token is stored here
+    return localStorage.getItem("token");
   };
 
   const loadQuizzes = useCallback(
@@ -146,8 +145,6 @@ export default function QuizHistory() {
       const url = `${
         config.apiUrl
       }/v1/quizzes/dashboard/${filter}?${params.toString()}`;
-      console.log(`Fetching quizzes from: ${url}`); // DEBUG
-
       try {
         const response = await fetch(url, {
           method: "GET",
@@ -159,15 +156,13 @@ export default function QuizHistory() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          console.error("API Error Response:", errorData); // DEBUG
+          console.error("API Error Response:", errorData);
           throw new Error(errorData.message || "Failed to fetch quizzes");
         }
 
-        const responseBody = await response.json(); // Get the full response body
-        console.log(`Full API response body for ${filter}:`, responseBody); // DEBUG
+        const responseBody = await response.json();
+        console.log(`Full API response body for ${filter}:`, responseBody);
 
-        // --- IMPORTANT CHANGE HERE ---
-        // Access the 'data' property from the responseBody
         const apiData = responseBody.data;
 
         if (!apiData || !Array.isArray(apiData.quizzes)) {
@@ -180,7 +175,6 @@ export default function QuizHistory() {
           );
         }
 
-        // Map API response fields to your frontend Quiz interface
         const fetchedQuizzes: Quiz[] = apiData.quizzes.map((q: any) => ({
           id: q.id, // Map 'id'
           title: q.title,
@@ -188,7 +182,7 @@ export default function QuizHistory() {
           score: q.score,
           dateTaken: q.dateTaken ? String(q.dateTaken) : "",
           duration: formatDuration(q.dateTaken), // Convert timeTaken (seconds) to "X min"
-          status: q.score >= 70 ? "passed" : "failed", // Assuming 70% is passing
+          status: q.score >= 60 ? "passed" : "failed",
         }));
 
         // Determine hasMore based on pagination data
@@ -1079,7 +1073,7 @@ export default function QuizHistory() {
 
                       {/* Retry Button */}
                       <button
-                        onClick={() => navigate(`/quizzes/take/${quiz.id}`)} // Use _id for navigation
+                        onClick={() => navigate(`/quizzes/take/${quiz.id}`)}
                         className="p-[12px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group"
                       >
                         <svg
@@ -1253,7 +1247,7 @@ export default function QuizHistory() {
                       <div className="flex items-center gap-[24px]">
                         {/* Start Button */}
                         <button
-                          onClick={() => navigate(`/quizzes/take/${draft.id}`)} // Use _id for navigation
+                          onClick={() => navigate(`/quizzes/take/${draft.id}`)}
                           className="py-[12px] px-[24px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group"
                         >
                           <span className="font-['Archivo'] text-[16px] font-semibold text-center text-[#5F24E0] group-hover:text-[#EFE9FC]">

@@ -2,7 +2,6 @@ import { ChatList } from "./chat-list/ChatList";
 import { ChatContent } from "./chat-messages/ChatContent";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-// import { mockSessions } from "../data/mock";
 import { ChatSession } from "../types";
 import { config } from "../../../../config";
 import { useChat } from "@/contexts/ChatContext";
@@ -10,7 +9,7 @@ import { useChat } from "@/contexts/ChatContext";
 export function ChatLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { setSessions, error, currentSessionId, setError } = useChat();
+  const { setSessions, currentSessionId, setError } = useChat();
   useEffect(() => {
     const fetchChats = async () => {
       const userId = localStorage.getItem("userId");
@@ -26,7 +25,7 @@ export function ChatLayout() {
         const response = await fetch(`${config.apiUrl}/v1/chats`, {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`, // Add the token to the Authorization header
+            Authorization: `Bearer ${token}`,
           },
         });
 

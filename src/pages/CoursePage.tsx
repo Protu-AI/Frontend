@@ -85,9 +85,6 @@ const CoursePage = () => {
             }
           } catch (enrollError) {
             console.error("Error during enrollment:", enrollError);
-            // Decide if you want to stop execution here or proceed to fetch lessons anyway.
-            // For now, we'll log the error and proceed to fetch lessons,
-            // as fetching lessons is often independent of a *new* enrollment.
           }
 
           // 2. Fetch lessons with progress
@@ -112,7 +109,7 @@ const CoursePage = () => {
             id: lesson.id,
             name: lesson.name,
             lessonOrder: lesson.lessonOrder,
-            content: "", // This will be empty since the progress endpoint doesn't return content
+            content: "",
             isFinished: lesson.isCompleted,
           }));
         } else {
@@ -142,13 +139,18 @@ const CoursePage = () => {
 
         setLessons(fetchedLessons);
 
-        const finishedCount = fetchedLessons.filter(
-          (l: { isFinished: any }) => l.isFinished
+        let finishedCount = fetchedLessons.filter(
+          (l: Lesson) => l.isFinished
         ).length;
         const totalCount = fetchedLessons.length;
         setCompletionPercentage(
           totalCount > 0 ? Math.floor((finishedCount / totalCount) * 100) : 0
         );
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setCompletionPercentage(0);
+          finishedCount = 0;
+        }
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -214,7 +216,7 @@ const CoursePage = () => {
     );
   }
 
-  const finishedLessonsCount = lessons.filter(
+  let finishedLessonsCount = lessons.filter(
     (lesson) => lesson.isFinished
   ).length;
   const totalLessonsCount = lessons.length;
@@ -250,7 +252,7 @@ const CoursePage = () => {
                   className="w-[26px] h-auto mr-[8px]"
                 />
                 <span className="font-['Archivo'] text-[22px] font-semibold text-[#EFE9FC]">
-                  {finishedLessonsCount}/{totalLessonsCount} Lessons
+                  {user ? finishedLessonsCount : 0}/{totalLessonsCount} Lessons
                 </span>
               </div>
             </div>

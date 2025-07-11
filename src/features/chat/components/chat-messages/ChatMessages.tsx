@@ -1,7 +1,6 @@
 import { Message } from "../../types";
 import { ChatMessage } from "./ChatMessage";
 import { useEffect, useRef } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -11,7 +10,6 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Scroll to the bottom when messages change
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 

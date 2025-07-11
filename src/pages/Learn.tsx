@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { MainLayout } from "@/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
@@ -182,9 +181,6 @@ interface CoursePathProps {
 function CoursePath({ track }: CoursePathProps) {
   const slugify = (str: string) => {
     return str;
-    // .toLowerCase()
-    // .replace(/ /g, "-")
-    // .replace(/[^\w-]+/g, "");
   };
 
   function getTextStartingFrom(

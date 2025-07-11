@@ -5,9 +5,6 @@ import { SignUp } from "./pages/SignUp";
 import { ChatLayout } from "./features/chat/components/ChatLayout";
 import { MainLayout } from "./layouts/MainLayout";
 import { ForgotPassword } from "./pages/ForgotPassword/ForgotPassword";
-// import { ForgotPasswordStep2 } from './pages/ForgotPassword/ForgotPasswordStep2';
-// import { ForgotPasswordStep3 } from './pages/ForgotPassword/ForgotPasswordStep3';
-// import { ForgotPasswordStep4 } from './pages/ForgotPassword/ForgotPasswordStep4';
 import { Settings } from "./pages/Settings";
 import { Learn } from "./pages/Learn";
 import { Path } from "./pages/Path";
@@ -17,7 +14,7 @@ import { Quizzes } from "./pages/Quizzes";
 import { QuizGenerator } from "./pages/Quizzes/QuizGenerator";
 import { QuizPage } from "./pages/Quizzes/QuizPage";
 import { QuizFeedback } from "./pages/Quizzes/QuizFeedback";
-import { ChatProvider } from "./contexts/ChatContext"; // Import ChatProvider here
+import { ChatProvider } from "./contexts/ChatContext";
 
 export default function App() {
   return (
@@ -27,9 +24,6 @@ export default function App() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        {/* <Route path="/forgot-password/step2" element={<ForgotPasswordStep2 />} />
-        <Route path="/forgot-password/step3" element={<ForgotPasswordStep3 />} />
-        <Route path="/forgot-password/step4" element={<ForgotPasswordStep4 />} /> */}
         <Route path="/settings/*" element={<Settings />} />
 
         {/* Wrap routes that need ChatContext with ChatProvider */}

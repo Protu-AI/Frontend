@@ -28,7 +28,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     setSessions(newSessions);
   };
 
-  // Function to set error
   const handleSetError = (error: string | null) => {
     setError(error);
   };
@@ -103,15 +102,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       );
       return;
     }
-
-    // Create a FormData object to send both text content and files (if any).
     const formData = new FormData();
-    formData.append("content", content); // Append the text content of the message.
+    formData.append("content", content);
     if (file) {
       formData.append("file", file); // If a file is provided, append it to the form data.
     }
 
-    let requestUrl; // Variable to hold the URL for the API request.
+    let requestUrl;
     let requestMethod = "POST";
 
     try {
@@ -121,8 +118,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         requestUrl = `${config.apiUrl}/v1/messages/${currentSessionId}`;
         console.log(`Sending message to existing session: ${currentSessionId}`);
       } else {
-        // If no session ID exists, create a new chat session by sending the message
-        // to the base messages endpoint.
         requestUrl = `${config.apiUrl}/v1/messages`;
         console.log("Creating new chat session and sending initial message.");
       }
@@ -135,8 +130,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         },
         body: formData,
       });
-
-      // Check if the response was successful (status code 2xx).
       if (!response.ok) {
         const errorData = await response.json(); // Parse the error response.
         // Throw an error with a more descriptive message if available.
@@ -148,10 +141,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       // Parse the successful response data.
       const responseData = await response.json();
       console.log("Message operation successful:", responseData);
-
-      // If a new chat was created (i.e., currentSessionId was null/undefined initially),
-      // update the currentSessionId with the new chatId from the response.
-      // This assumes `setCurrentSessionId` is available in the component's scope.
       if (!currentSessionId && responseData.data && responseData.data.chatId) {
         // Ensure `setCurrentSessionId` is defined before calling it.
         if (typeof setCurrentSessionId === "function") {

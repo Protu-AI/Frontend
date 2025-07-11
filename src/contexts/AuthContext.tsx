@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error(error);
       signOut();
-      throw error; // Propagate error to UI
+      throw error;
     }
   };
 

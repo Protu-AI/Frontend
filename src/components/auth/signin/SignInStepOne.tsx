@@ -19,7 +19,6 @@ export function SignInStepOne({
   onContinue,
 }: SignInStepOneProps) {
   const { validateField, errors } = useFormValidation();
-  // const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const handleContinue = async () => {
     if (validateField("email", email)) {

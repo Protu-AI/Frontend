@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "./Logo";
 import { PasswordInput } from "./PasswordInput";
-import { motion, useAnimation, AnimatePresence } from "framer-motion";
+import { motion, useAnimation } from "framer-motion";
 import { useFormValidation } from "../signup/useFormValidation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
