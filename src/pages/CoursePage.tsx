@@ -55,7 +55,9 @@ const CoursePage = () => {
           // 1. Send POST request for enrollment
           try {
             const enrollResponse = await fetch(
-              `${config.apiUrl}/v1/progress/courses/${course.name}/enrollments`,
+              `${config.apiUrl}/v1/progress/courses/${
+                courseName ? courseName : course.name
+              }/enrollments`,
               {
                 method: "POST",
                 headers: {
@@ -89,7 +91,9 @@ const CoursePage = () => {
 
           // 2. Fetch lessons with progress
           response = await fetch(
-            `${config.apiUrl}/v1/courses/${course.name}/lessons/progress`,
+            `${config.apiUrl}/v1/courses/${
+              courseName ? courseName : course.name
+            }/lessons/progress`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -110,12 +114,14 @@ const CoursePage = () => {
             name: lesson.name,
             lessonOrder: lesson.lessonOrder,
             content: "",
-            isFinished: lesson.isCompleted,
+            isFinished: lesson.isCompleted || false,
           }));
         } else {
           // Unauthenticated request (original behavior)
           response = await fetch(
-            `${config.apiUrl}/v1/courses/${course.name}/lessons`
+            `${config.apiUrl}/v1/courses/${
+              courseName ? courseName : course.name
+            }/lessons`
           );
 
           if (!response.ok) {
@@ -185,7 +191,9 @@ const CoursePage = () => {
     });
   };
 
-  const nextNotFinishedLesson = lessons.find((lesson) => !lesson.isFinished);
+  const nextNotFinishedLesson = user
+    ? lessons.find((lesson) => !lesson.isFinished)
+    : 1;
 
   if (loading) {
     return (
@@ -321,8 +329,10 @@ const CoursePage = () => {
                   <div
                     className={cn(
                       "w-[14px] h-[14px] rounded-full shrink-0",
-                      lesson.isFinished
-                        ? "bg-[#5F24E0]"
+                      user
+                        ? lesson.isFinished
+                          ? "bg-[#5F24E0]"
+                          : "bg-white border border-[#5F24E0]"
                         : "bg-white border border-[#5F24E0]"
                     )}
                   ></div>
