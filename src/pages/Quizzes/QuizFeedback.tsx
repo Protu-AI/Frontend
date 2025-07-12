@@ -13,23 +13,21 @@ import {
 } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { prism } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { config } from "../../../config";
 
 // --- Interfaces for Quiz Data ---
-// IMPORTANT: These interfaces are updated to match YOUR BACKEND RESPONSE
-//
-// QuizQuestionOption now reflects that 'options' in questionReviews is an array of strings
-type QuizQuestionOption = string; // This is the crucial change
+type QuizQuestionOption = string;
 
 interface QuizQuestionReview {
   questionId: string;
   questionText: string;
   questionType: "multiple_choice" | "true_false";
-  options: QuizQuestionOption[]; // Now an array of strings
-  selectedAnswer: string; // The text of the selected answer
-  correctAnswer: string; // The text of the correct answer
+  options: QuizQuestionOption[];
+  selectedAnswer: string;
+  correctAnswer: string;
   isCorrect: boolean;
-  explanation: string;
+  explanation?: string; // Made optional as per example
   order: number;
   codeBlock?: {
     language: string;
@@ -37,11 +35,16 @@ interface QuizQuestionReview {
   };
 }
 
-export interface QuizData {
+interface RecommendedCourse {
+  id: number;
+  name: string;
+  description: string;
+  picUrl: string;
+  lessonCount: number;
+}
+
+export interface QuizAttemptData {
   attemptId: string;
-  quizId: string;
-  quizTitle: string;
-  quizTopic: string;
   score: number;
   passed: boolean;
   timeTaken: number; // in seconds
@@ -49,19 +52,35 @@ export interface QuizData {
   correctAnswersCount: number;
   incorrectAnswersCount: number;
   questionReviews: QuizQuestionReview[];
+  aiFeedback: {
+    signal: string;
+    feedbackMessage: string;
+  };
+  recommendedCourses: RecommendedCourse[];
+}
+
+export interface QuizApiResponse {
+  status: string;
+  message: string;
+  data: {
+    id: string;
+    title: string;
+    topic: string;
+    difficultyLevel: string;
+    numberOfQuestions: number;
+    timeLimit: number;
+    createdAt: string;
+    hasBeenAttempted: boolean;
+    bestAttempt: QuizAttemptData;
+  };
 }
 
 interface CourseCardProps {
-  icon: string;
-  title: string;
-  lessons: number;
-  hours: number;
-  description: string;
-  alt: string;
+  course: RecommendedCourse;
 }
 
 interface Choice {
-  id: string; // Added id for consistency and React keys
+  id: string;
   text: string;
 }
 
@@ -70,11 +89,11 @@ interface QuestionDataForUI {
   questionNumber: number;
   questionText: string;
   type: "multiple_choice" | "true_false";
-  choices: Choice[]; // Represents the options from QuizQuestionReview, now mapped correctly
-  correctAnswerText: string; // The text of the correct answer
-  userAnswerText?: string; // The text of the user's selected answer
+  choices: Choice[];
+  correctAnswerText: string;
+  userAnswerText?: string;
   isCorrect: boolean;
-  explanation: string;
+  explanation?: string;
   codeBlock?: {
     language: string;
     code: string;
@@ -117,7 +136,6 @@ const FeedbackChoice = ({
         circleColor: "#FF5F5F",
       };
     } else {
-      // Not selected by user and not the correct answer, or selected by user and it's correct (handled by isCorrectAnswer)
       return {
         borderColor: "#A6B5BB",
         backgroundColor: "#FFFFFF",
@@ -156,20 +174,71 @@ const FeedbackChoice = ({
         className="font-['Archivo'] text-[28px] font-normal"
         style={{ color: style.textColor }}
       >
-        {choice.text} {/* This will now correctly display the option string */}
+        {choice.text}
       </span>
     </div>
   );
 };
 
-function CourseCard({
-  icon,
-  title,
-  lessons,
-  hours,
-  description,
-  alt,
-}: CourseCardProps) {
+function CourseCard({ course }: CourseCardProps) {
+  const navigate = useNavigate();
+
+  function getTextStartingFrom(
+    fullText: string,
+    searchTerm: string
+  ): string | null {
+    const startIndex = fullText.indexOf(searchTerm);
+
+    if (startIndex !== -1) {
+      return "This " + fullText.substring(startIndex);
+    }
+    return null;
+  }
+
+  const handleOpenCourse = async () => {
+    // <--- ADD THIS FUNCTION
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("Authentication token not found.");
+        navigate("/login"); // Or handle as desired
+        return;
+      }
+
+      const encodedCourseName = encodeURIComponent(course.name);
+
+      const response = await fetch(
+        `${config.apiUrl}/v1/courses/${encodedCourseName}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch course details.");
+      }
+
+      const result = await response.json();
+      const fullCourseData = result.data; // The complete course object
+
+      navigate(`/course/${encodedCourseName}`, {
+        state: { course: fullCourseData }, // <--- PASS THE FULL DATA HERE
+      });
+    } catch (err) {
+      console.error("Error opening course:", err);
+      alert(
+        `Failed to open course: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
+    }
+  };
+
   return (
     <div
       className="bg-white rounded-[32px] flex flex-col h-full"
@@ -178,11 +247,18 @@ function CourseCard({
       <div className="p-8 flex-1">
         <div className="flex items-center">
           <div className="flex-shrink-0">
-            <img src={icon} alt={alt} className="h-[70px] w-auto" />
+            <img
+              src={
+                course.picUrl ||
+                "https://img.icons8.com/ios-filled/100/EFE9FC/html-5.png"
+              }
+              alt={course.name}
+              className="h-[70px] w-auto hue-rotate-[330deg] saturate-[5000%] brightness-[90%] contrast-[94%]"
+            />
           </div>
           <div className="ml-6 flex-1">
             <h3 className="text-[#1C0B43] font-['Archivo'] font-semibold text-[28px] text-left mb-2">
-              {title}
+              {course.name}
             </h3>
             <div className="flex items-center gap-4">
               <div className="flex items-center">
@@ -191,27 +267,32 @@ function CourseCard({
                   strokeWidth={2}
                 />
                 <span className="text-[#A6B5BB] font-['Archivo'] font-semibold text-base text-left">
-                  {lessons} lessons
+                  {course.lessonCount} lessons
                 </span>
               </div>
-              <div className="flex items-center">
-                <ClockIcon
-                  className="w-5 h-5 text-[#A6B5BB] mr-2"
-                  strokeWidth={2}
-                />
-                <span className="text-[#A6B5BB] font-['Archivo'] font-semibold text-base text-left">
-                  {hours} hours
-                </span>
-              </div>
+              {course.lessonCount > 0 && (
+                <div className="flex items-center">
+                  <ClockIcon
+                    className="w-5 h-5 text-[#A6B5BB] mr-2"
+                    strokeWidth={2}
+                  />
+                  <span className="text-[#A6B5BB] font-['Archivo'] font-semibold text-base text-left">
+                    {Math.ceil(course.lessonCount * 0.5)} hours
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
         <hr className="border-[#D6D6D6] border-t-[1px] my-4" />
         <p className="text-[#ABABAB] font-['Archivo'] font-normal text-base text-left">
-          {description}
+          {getTextStartingFrom(course.description, "course")}
         </p>
       </div>
-      <button className="bg-[#5F24E0] hover:bg-[#9F7CEC] text-[#EFE9FC] font-['Archivo'] font-semibold text-[22px] py-5 rounded-b-[32px] transition-colors text-center">
+      <button
+        onClick={handleOpenCourse}
+        className="bg-[#5F24E0] hover:bg-[#9F7CEC] text-[#EFE9FC] font-['Archivo'] font-semibold text-[22px] py-5 rounded-b-[32px] transition-colors text-center"
+      >
         Open Course
       </button>
     </div>
@@ -352,34 +433,106 @@ function QuestionItem({ question, isOpen, onToggle }: QuestionItemProps) {
 }
 
 export function QuizFeedback() {
-  const location = useLocation();
+  const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
 
-  const { quizResult } = (location.state || {}) as { quizResult?: QuizData };
-
-  useEffect(() => {
-    if (!quizResult) {
-      console.warn("No quiz results found in navigation state. Redirecting...");
-      navigate("/quizzes", { replace: true });
-    }
-  }, [quizResult, navigate]);
-
+  // All useState hooks must be declared at the top level
+  const [quizData, setQuizData] = useState<QuizAttemptData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [openQuestions, setOpenQuestions] = useState<{
     [key: number]: boolean;
   }>({});
 
-  const toggleQuestion = (questionIndex: number) => {
-    setOpenQuestions((prev) => ({
-      ...prev,
-      [questionIndex]: !prev[questionIndex],
-    }));
-  };
+  useEffect(() => {
+    const fetchQuizResults = async () => {
+      if (!quizId) {
+        setError("Quiz ID not provided.");
+        setLoading(false);
+        navigate("/quizzes", { replace: true });
+        return;
+      }
 
-  if (!quizResult) {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("Authentication token not found.");
+        }
+
+        const response = await fetch(
+          `${config.apiUrl}/v1/attempts/attempted-preview/${quizId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch quiz results.");
+        }
+
+        const result: QuizApiResponse = await response.json();
+        setQuizData(result.data.bestAttempt);
+      } catch (err) {
+        console.error("Error fetching quiz results:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "An unknown error occurred while fetching quiz results."
+        );
+        // Do not navigate immediately on error, allow error message to show
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuizResults();
+  }, [quizId, navigate]);
+
+  // Now, place your conditional returns AFTER all hooks are called
+  if (loading) {
     return (
       <MainLayout>
         <div className="flex justify-center items-center h-screen text-xl text-[#1C0B43]">
-          Loading quiz results or redirecting...
+          Loading quiz results...
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col justify-center items-center h-screen text-xl text-[#FF5F5F]">
+          Error: {error}
+          <button
+            onClick={() => navigate("/quizzes")}
+            className="mt-4 px-6 py-3 bg-[#5F24E0] text-white rounded-lg hover:bg-[#9F7CEC] transition-colors"
+          >
+            Go back to Quizzes
+          </button>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!quizData) {
+    return (
+      <MainLayout>
+        <div className="flex justify-center items-center h-screen text-xl text-[#1C0B43]">
+          No quiz results available.
+          <button
+            onClick={() => navigate("/quizzes")}
+            className="mt-4 px-6 py-3 bg-[#5F24E0] text-white rounded-lg hover:bg-[#9F7CEC] transition-colors"
+          >
+            Go back to Quizzes
+          </button>
         </div>
       </MainLayout>
     );
@@ -392,8 +545,11 @@ export function QuizFeedback() {
     correctAnswersCount,
     incorrectAnswersCount,
     questionReviews,
-    quizTitle,
-  } = quizResult;
+    recommendedCourses,
+  } = quizData;
+
+  const quizTitle =
+    questionReviews.length > 0 ? quizData.aiFeedback.signal : "Quiz Feedback";
 
   const formatTimeTaken = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -455,47 +611,23 @@ export function QuizFeedback() {
   const dashArray = 2 * Math.PI * outerRadius;
   const dashOffset = dashArray - (dashArray * progress) / 100;
 
-  const courses = [
-    {
-      icon: "https://img.icons8.com/ios-filled/100/5F24E0/html-5.png",
-      title: "HTML & CSS for Beginners",
-      lessons: 12,
-      hours: 8,
-      description:
-        "Start your web development journey by mastering the fundamentals of HTML and CSS. Learn how to structure pages, and create responsive layouts using Flexbox and Grid.",
-      alt: "HTML5",
-    },
-    {
-      icon: "https://img.icons8.com/ios-filled/100/5F24E0/javascript.png",
-      title: "JavaScript for Beginners",
-      lessons: 10,
-      hours: 6,
-      description:
-        "Learn the fundamentals of JavaScript. Understand variables, loops, functions, and more to build interactive web applications.",
-      alt: "JavaScript",
-    },
-    {
-      icon: "https://img.icons8.com/ios-filled/100/5F24E0/react-native.png",
-      title: "React for Beginners",
-      lessons: 15,
-      hours: 10,
-      description:
-        "Dive into React and learn how to build user interfaces with components, state management, and modern development patterns.",
-      alt: "React",
-    },
-  ];
+  const toggleQuestion = (questionIndex: number) => {
+    setOpenQuestions((prev) => ({
+      ...prev,
+      [questionIndex]: !prev[questionIndex],
+    }));
+  };
 
-  // Corrected mapping: now 'option' is a string
+  // Map backend question reviews to UI friendly format
   const questions: QuestionDataForUI[] = questionReviews.map(
     (review, index) => ({
       id: review.questionId,
       questionNumber: review.order,
       questionText: review.questionText,
       type: review.questionType,
-      // THE CHANGE IS HERE:
       choices: review.options.map((optionText, idx) => ({
         id: `${review.questionId}-option-${idx}`,
-        text: optionText, // Directly use the string value here
+        text: optionText,
       })),
       correctAnswerText: review.correctAnswer,
       userAnswerText: review.selectedAnswer,
@@ -598,42 +730,40 @@ export function QuizFeedback() {
                 </div>
               </div>
             </div>
-            <div className="mt-8">
-              <div className="mb-8">
-                <div className="flex items-start">
-                  <div className="bg-[#EFE9FC] rounded-xl p-4 flex-shrink-0">
-                    <Lightbulb
-                      className="w-[35px] h-[35px] text-[#5F24E0]"
-                      strokeWidth={3}
-                    />
-                  </div>
-                  <div className="ml-4">
-                    <h2 className="text-[#1C0B43] font-['Archivo'] font-semibold text-[32px] text-left">
-                      Recommended Courses Just for You
-                    </h2>
-                    <p className="text-[#A6B5BB] font-['Archivo'] font-normal text-[22px] text-left">
-                      Based on your quiz results, we suggest the following
-                      courses to help you improve.
-                    </p>
-                  </div>
-                </div>
-              </div>
+
+            {/* Recommended Courses Section - Conditionally rendered */}
+            {recommendedCourses && recommendedCourses.length > 0 && (
               <div className="mt-8">
-                <div className="grid grid-cols-3 gap-6">
-                  {courses.map((course, index) => (
-                    <CourseCard
-                      key={index}
-                      icon={course.icon}
-                      title={course.title}
-                      lessons={course.lessons}
-                      hours={course.hours}
-                      description={course.description}
-                      alt={course.alt}
-                    />
-                  ))}
+                <div className="mb-8">
+                  <div className="flex items-start">
+                    <div className="bg-[#EFE9FC] rounded-xl p-4 flex-shrink-0">
+                      <Lightbulb
+                        className="w-[35px] h-[35px] text-[#5F24E0]"
+                        strokeWidth={3}
+                      />
+                    </div>
+                    <div className="ml-4">
+                      <h2 className="text-[#1C0B43] font-['Archivo'] font-semibold text-[32px] text-left">
+                        Recommended Courses Just for You
+                      </h2>
+                      <p className="text-[#A6B5BB] font-['Archivo'] font-normal text-[22px] text-left">
+                        Based on your quiz results, we suggest the following
+                        courses to help you improve.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-8">
+                  <div className="grid grid-cols-3 gap-6">
+                    {recommendedCourses.map((course) => (
+                      <CourseCard key={course.id} course={course} />
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Question Review Section */}
             <div className="mt-8">
               <div className="mb-8">
                 <div className="flex items-start">

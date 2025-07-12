@@ -56,7 +56,7 @@ const CoursePage = () => {
           try {
             const enrollResponse = await fetch(
               `${config.apiUrl}/v1/progress/courses/${
-                courseName ? courseName : course.name
+                courseName || course.name
               }/enrollments`,
               {
                 method: "POST",
@@ -169,7 +169,7 @@ const CoursePage = () => {
     };
 
     fetchLessons();
-  }, [course.name, user]);
+  }, [courseName || course.name, user]);
 
   const formatCourseName = (courseName: string) => {
     return courseName
@@ -179,14 +179,14 @@ const CoursePage = () => {
       .join(" ");
   };
 
-  const courseTitle = formatCourseName(course.name || "");
+  const courseTitle = formatCourseName(courseName || course.name || "");
 
   const handleLessonClick = (lesson: Lesson) => {
-    // In CoursePage.tsx
     navigate(`/lesson/${lesson.name}`, {
       state: {
         lessons: lessons,
         course: course,
+        courseName: courseName || course.name,
       },
     });
   };
@@ -268,7 +268,7 @@ const CoursePage = () => {
             <div className="h-[64px]"></div>
 
             <div className="w-[1000px] font-['Archivo'] text-[24px] font-normal text-[#EFE9FC] text-left">
-              {getTextStartingFrom(course?.description, "This course") ||
+              {getTextStartingFrom(course?.description || " ", "This course") ||
                 "No course description available"}
             </div>
 

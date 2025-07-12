@@ -54,7 +54,7 @@ export default function App() {
         <Route path="/quizzes" element={<Quizzes />} />
         <Route path="/quizzes/generate" element={<QuizGenerator />} />
         <Route path="/quizzes/take/:quizId" element={<QuizPage />} />
-        <Route path="/quizzes/feedback" element={<QuizFeedback />} />
+        <Route path="/quizzes/feedback/:quizId" element={<QuizFeedback />} />
         <Route path="/path/:pathName" element={<Path />} />
         <Route path="/course/:courseName" element={<CoursePage />} />
       </Routes>

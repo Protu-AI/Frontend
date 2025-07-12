@@ -1044,7 +1044,10 @@ export default function QuizHistory() {
                       </div>
 
                       {/* Preview Button */}
-                      <button className="p-[12px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group">
+                      <button
+                        onClick={() => navigate(`/quizzes/feedback/${quiz.id}`)}
+                        className="p-[12px] rounded-[16px] bg-[#EFE9FC] hover:bg-[#9F7CEC] transition-colors duration-200 group"
+                      >
                         <svg
                           width="22"
                           height="22"

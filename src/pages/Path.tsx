@@ -22,18 +22,6 @@ export function Path() {
   const [error, setError] = useState<string | null>(null);
   const [trackName, setTrackName] = useState("");
 
-  function getTextStartingFrom(
-    fullText: string,
-    searchTerm: string
-  ): string | null {
-    const startIndex = fullText.indexOf(searchTerm);
-
-    if (startIndex !== -1) {
-      return fullText.substring(startIndex);
-    }
-    return null;
-  }
-
   useEffect(() => {
     if (!pathName) {
       setError("No track specified");

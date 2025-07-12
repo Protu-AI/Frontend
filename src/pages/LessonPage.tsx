@@ -168,8 +168,11 @@ const LessonPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get lessons array and courseName from navigation state
-  const { lessons: courseLessons = [], course } = location.state || {};
+  const {
+    lessons: courseLessons = [],
+    course,
+    courseName,
+  } = location.state || {};
   const [currentLessonIndex, setCurrentLessonIndex] = useState(-1);
   useEffect(() => {
     const fetchLesson = async () => {
@@ -202,7 +205,9 @@ const LessonPage = () => {
       if (!token || !user) return false;
 
       const response = await fetch(
-        `${config.apiUrl}/v1/progress/courses/${course.name}/lessons/${lesson.name}/completed`,
+        `${config.apiUrl}/v1/progress/courses/${
+          courseName || course.name
+        }/lessons/${lesson.name}/completed`,
         {
           method: "POST",
           headers: {
@@ -236,12 +241,12 @@ const LessonPage = () => {
       });
     } else {
       // No more lessons - return to course page
-      navigate(`/course/${course.name}`);
+      navigate(`/course/${courseName || course.name}`);
     }
   };
 
   const handleViewCourseClick = () => {
-    navigate(course.name ? `/course/${course.name}` : "/", {
+    navigate(`/course/${courseName || course.name}`, {
       state: { course: course },
     });
   };
