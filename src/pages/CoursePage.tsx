@@ -13,6 +13,15 @@ interface Lesson {
   isFinished?: boolean;
 }
 
+interface CourseData {
+  id: number;
+  name: string;
+  description: string;
+  lessons: any[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 const CoursePage = () => {
   const { user } = useAuth();
   const { courseName } = useParams();
@@ -22,7 +31,10 @@ const CoursePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [completionPercentage, setCompletionPercentage] = useState(0);
-  const course = location.state?.course;
+  const [course, setCourse] = useState<CourseData | null>(null);
+  const initialCourseFromLocationState: CourseData | undefined = (
+    location.state as { course?: CourseData }
+  )?.course;
 
   function getTextStartingFrom(
     fullText: string,
@@ -35,6 +47,71 @@ const CoursePage = () => {
     }
     return null;
   }
+
+  // --- EFFECT 1: Load/Fetch Course Data ---
+  useEffect(() => {
+    const loadCourseData = async () => {
+      setError(null);
+
+      // Prioritize course name from URL params
+      const nameToUse = courseName;
+
+      if (!nameToUse) {
+        setError("No course name provided in URL.");
+        return;
+      }
+
+      // Check if course data is already available in location.state and matches the URL param
+      if (
+        initialCourseFromLocationState &&
+        initialCourseFromLocationState.name === nameToUse
+      ) {
+        setCourse(initialCourseFromLocationState);
+        setLoading(true); // Indicate that lessons will now start loading
+        return;
+      }
+
+      // If not from state, fetch the course details from the API
+      try {
+        const token = localStorage.getItem("token");
+        const encodedCourseName = encodeURIComponent(nameToUse);
+
+        const response = await fetch(
+          `${config.apiUrl}/v1/courses/${encodedCourseName}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || "Failed to fetch course details."
+          );
+        }
+
+        const result = await response.json();
+        setCourse(result.data);
+        setLoading(true);
+      } catch (err) {
+        console.error("Error loading course:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "An error occurred while loading the course."
+        );
+        setCourse(null); // Ensure course is null on error
+      } finally {
+        console.log("Course data loaded successfully.");
+        setLoading(false);
+      }
+    };
+
+    loadCourseData();
+  }, [courseName, initialCourseFromLocationState]);
 
   useEffect(() => {
     if (!courseName) {
@@ -56,7 +133,7 @@ const CoursePage = () => {
           try {
             const enrollResponse = await fetch(
               `${config.apiUrl}/v1/progress/courses/${
-                courseName || course.name
+                courseName || course?.name
               }/enrollments`,
               {
                 method: "POST",
@@ -92,7 +169,7 @@ const CoursePage = () => {
           // 2. Fetch lessons with progress
           response = await fetch(
             `${config.apiUrl}/v1/courses/${
-              courseName ? courseName : course.name
+              courseName ? courseName : course?.name
             }/lessons/progress`,
             {
               headers: {
@@ -120,7 +197,7 @@ const CoursePage = () => {
           // Unauthenticated request (original behavior)
           response = await fetch(
             `${config.apiUrl}/v1/courses/${
-              courseName ? courseName : course.name
+              courseName ? courseName : course?.name
             }/lessons`
           );
 
@@ -169,7 +246,7 @@ const CoursePage = () => {
     };
 
     fetchLessons();
-  }, [courseName || course.name, user]);
+  }, [courseName || course?.name, user]);
 
   const formatCourseName = (courseName: string) => {
     return courseName
@@ -179,14 +256,14 @@ const CoursePage = () => {
       .join(" ");
   };
 
-  const courseTitle = formatCourseName(courseName || course.name || "");
+  const courseTitle = formatCourseName(courseName || course?.name || "");
 
   const handleLessonClick = (lesson: Lesson) => {
     navigate(`/lesson/${lesson.name}`, {
       state: {
         lessons: lessons,
         course: course,
-        courseName: courseName || course.name,
+        courseName: courseName || course?.name,
       },
     });
   };

@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { prism } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useParams, useNavigate } from "react-router-dom";
-import { config } from "../../../config";
+import { config } from "../../../config"; // Ensure this path is correct
+import { Loader2 } from "lucide-react"; // <--- ADD THIS IMPORT
 
 // Types for quiz data - Use these for backend integration
 interface Choice {
@@ -192,6 +193,7 @@ export function QuizPage() {
   const [quizData, setQuizData] = useState<Question[]>([]);
   const [quizTitle, setQuizTitle] = useState("Loading Quiz...");
   const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // State for selected answers
   const [selectedAnswers, setSelectedAnswers] = useState<{
@@ -216,7 +218,6 @@ export function QuizPage() {
       const token = localStorage.getItem("token");
       if (!token) {
         console.error("No token found in local storage.");
-        // Optionally redirect to login page
         navigate("/login");
         return;
       }
@@ -239,11 +240,9 @@ export function QuizPage() {
         );
 
         if (!response.ok) {
-          // Handle specific error codes or generic error
           const errorData = await response.json();
           console.error("Failed to fetch quiz:", errorData.message);
           alert(`Failed to start quiz: ${errorData.message}`);
-          // Redirect or show error message to user
           return;
         }
 
@@ -290,11 +289,14 @@ export function QuizPage() {
 
   // Submit quiz answers - CUSTOMIZE THIS FOR YOUR BACKEND
   const handleSubmitQuiz = async () => {
+    setSubmitting(true);
+
     if (!attemptId) {
       console.error("Attempt ID is not available. Cannot submit quiz.");
       alert(
         "Quiz attempt not started correctly. Please refresh and try again."
       );
+      setSubmitting(false); // <--- Reset if early exit
       return;
     }
 
@@ -302,6 +304,7 @@ export function QuizPage() {
     if (!token) {
       console.error("No token found in local storage.");
       navigate("/login");
+      setSubmitting(false); // <--- Reset if early exit
       return;
     }
 
@@ -337,32 +340,33 @@ export function QuizPage() {
         const errorData = await response.json();
         console.error("Failed to submit quiz:", errorData.message);
         alert(`Failed to submit quiz: ${errorData.message}`);
-        return;
+        // No return here, let finally block handle setSubmitting(false)
+      } else {
+        const result = await response.json();
+        console.log("Quiz submission successful:", result.data);
+        navigate(`/quizzes/feedback/${quizId}`);
       }
-
-      const result = await response.json();
-      console.log("Quiz submission successful:", result.data);
-
-      // Navigate to the QuizFeedback page and pass the result data as state
-      navigate("/quizzes/feedback", { state: { quizResult: result.data } });
     } catch (error) {
       console.error("Error submitting quiz:", error);
       alert("An error occurred while submitting the quiz. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
+
   // Timer countdown effect
   useEffect(() => {
-    if (timeLeft > 0 && quizData.length > 0) {
-      // Only start timer if quiz data is loaded
+    // Only start timer if quiz data is loaded and not already submitting
+    if (timeLeft > 0 && quizData.length > 0 && !submitting) {
+      // <--- Added !submitting
       const timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
       return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && quizData.length > 0) {
-      // Time's up, automatically submit the quiz
+    } else if (timeLeft === 0 && quizData.length > 0 && !submitting) {
       handleSubmitQuiz();
     }
-  }, [timeLeft, quizData, handleSubmitQuiz]); // Add handleSubmitQuiz to dependencies
+  }, [timeLeft, quizData, handleSubmitQuiz, submitting]); // <--- Added 'submitting' to dependencies
 
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
@@ -442,14 +446,22 @@ export function QuizPage() {
         {/* Right Side - Submit Button */}
         <button
           onClick={handleSubmitQuiz}
-          disabled={questionsRemaining > 0} // Disable submit if not all questions answered
-          className={`font-['Archivo'] text-[28px] font-semibold rounded-[24px] py-[16px] px-[32px] transition-all duration-200 ${
-            questionsRemaining > 0
-              ? "bg-[#A6B5BB] cursor-not-allowed"
-              : "bg-[#5F24E0] hover:bg-[#9F7CEC] text-[#EFE9FC]"
-          }`}
+          // Disable if questions remaining or if submitting
+          disabled={questionsRemaining > 0 || submitting}
+          className={`font-['Archivo'] text-[28px] font-semibold rounded-[24px] py-[16px] px-[32px] transition-all duration-200
+            ${
+              questionsRemaining > 0 || submitting
+                ? "bg-[#A6B5BB] cursor-not-allowed"
+                : "bg-[#5F24E0] hover:bg-[#9F7CEC] text-[#EFE9FC]"
+            } flex items-center justify-center`}
         >
-          Submit
+          {submitting ? (
+            <>
+              <Loader2 className="animate-spin mr-2" size={24} /> Submitting...
+            </>
+          ) : (
+            "Submit"
+          )}
         </button>
       </div>
     </div>

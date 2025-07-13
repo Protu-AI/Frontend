@@ -49,7 +49,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
           "relative max-w-[600px] font-['Archivo'] text-[18px] md:text-[20px] font-normal text-[#1C0B43] leading-relaxed",
           isBot
             ? "bg-transparent"
-            : "bg-[#EFE9FC] hover:-translate-y-0.5 transition-all duration-300 ease-in-out shadow-purple-600/30 rounded-br-none font-['Archivo'] dark:bg-[#BFA7F3]/80 rounded-2xl p-[12px]"
+            : "bg-[#e0d5fa] hover:-translate-y-0.5 transition-all duration-300 ease-in-out shadow-purple-600/30 rounded-br-none font-['Archivo'] dark:bg-[#BFA7F3]/80 rounded-2xl p-[12px]"
         )}
       >
         {isBot && (

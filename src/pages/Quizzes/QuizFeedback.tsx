@@ -196,7 +196,6 @@ function CourseCard({ course }: CourseCardProps) {
   }
 
   const handleOpenCourse = async () => {
-    // <--- ADD THIS FUNCTION
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -253,7 +252,7 @@ function CourseCard({ course }: CourseCardProps) {
                 "https://img.icons8.com/ios-filled/100/EFE9FC/html-5.png"
               }
               alt={course.name}
-              className="h-[70px] w-auto hue-rotate-[330deg] saturate-[5000%] brightness-[90%] contrast-[94%]"
+              className="h-[70px] w-auto hue-rotate-[330deg] saturate-[5000%] brightness-[40%] contrast-[94%]"
             />
           </div>
           <div className="ml-6 flex-1">
