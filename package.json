@@ -56,11 +56,11 @@
     "embla-carousel-react": "^8.0.0",
     "recharts": "^2.8.0",
     "cmdk": "^1.1.1",
-    "vaul": "^0.16.0",
+    "vaul": "^1.1.2",
     "react-hook-form": "^7.51.3",
-    "input-otp": "^1.0.0",
-    "react-resizable-panels": "^1.0.0",
-    "sonner": "^1.0.0",
+    "input-otp": "^1.4.2",
+    "react-resizable-panels": "^3.0.3",
+    "sonner": "^2.0.6",
     "@radix-ui/react-toggle-group": "^1.0.7"
   },
   "devDependencies": {
