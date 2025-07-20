@@ -77,9 +77,7 @@
     "tailwindcss": "3.4.1",
     "tailwindcss-animate": "1.0.7",
     "typescript": "5.3.3",
-    "vite": "5.1.0",
-    "@types/react-day-picker": "^9.0.0",
-    "@types/react-hook-form": "^7.51.3"
+    "vite": "5.1.0"
   },
   "resolutions": {
     "postcss": "8.4.31"
