@@ -1,5 +1,5 @@
 import { MainLayout } from "@/layouts/MainLayout";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { config } from "../../../config";
 
@@ -563,7 +563,7 @@ const QuizTitleEditor: React.FC<QuizTitleEditorProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(initialTitle);
-  const [originalTitle, setOriginalTitle] = useState(initialTitle); // Store original for cancel
+  const [originalTitle, setOriginalTitle] = useState(initialTitle);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -644,7 +644,7 @@ const QuizTitleEditor: React.FC<QuizTitleEditorProps> = ({
   };
 
   return (
-    <div className="bg-transparent rounded-[32px] px-[128px] py-[32px] flex items-center justify-center gap-[16px] relative shadow-[0px_2px_6px_#00000014] w-[1000px]">
+    <div>
       <div className="w-full max-w-[800px] bg-[#EFE9FC] rounded-[24px] px-[32px] py-[24px] flex items-center justify-between shadow-[0px_2px_6px_#00000014] relative">
         {isEditing ? (
           <>
@@ -736,8 +736,7 @@ export function QuizGenerator() {
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">(
     "medium"
   );
-  const [numberOfQuestions, setNumberOfQuestions] = useState(12);
-  const [timeLimit, setTimeLimit] = useState(12);
+  const [numberOfQuestions, setNumberOfQuestions] = useState(10);
   const [questionTypes, setQuestionTypes] = useState({
     multipleChoice: true,
     trueFalse: true,
@@ -764,6 +763,28 @@ export function QuizGenerator() {
     numberOfQuestions: number;
   }
   const [quizData, setQuizData] = useState<QuizData | null>(null);
+
+  const suggestedTime = useMemo(() => {
+    let calculatedTime;
+    if (difficulty === "hard") {
+      calculatedTime = numberOfQuestions * 2.15;
+    } else if (difficulty === "medium") {
+      calculatedTime = numberOfQuestions * 2;
+    } else {
+      calculatedTime = numberOfQuestions * 0.625;
+    }
+    return Math.round(calculatedTime);
+  }, [numberOfQuestions, difficulty]);
+
+  const [timeLimit, setTimeLimit] = useState(suggestedTime); //time limit in minutes
+  const [hasTimeLimitBeenManuallySet, setHasTimeLimitBeenManuallySet] =
+    useState(false);
+
+  useEffect(() => {
+    if (!hasTimeLimitBeenManuallySet) {
+      setTimeLimit(suggestedTime);
+    }
+  }, [suggestedTime, hasTimeLimitBeenManuallySet]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -796,8 +817,6 @@ export function QuizGenerator() {
   const handleSubmit = async () => {
     setIsLoading(true);
     setError(null);
-
-    // TODO: Re-enable API integration when UI work is complete
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -1124,7 +1143,6 @@ export function QuizGenerator() {
                   />
                 </div>
                 <div className="mb-[32px]" />
-
                 <div className="flex items-start gap-[128px]">
                   <NumberInput
                     value={numberOfQuestions}
@@ -1166,12 +1184,17 @@ export function QuizGenerator() {
                     </div>
                   </div>
 
-                  <NumberInput
-                    value={timeLimit}
-                    setValue={setTimeLimit}
-                    label="Time Limit (minutes)"
-                    icon={<ClockIcon />}
-                  />
+                  <div className="flex flex-col">
+                    <NumberInput
+                      value={timeLimit}
+                      setValue={setTimeLimit}
+                      label="Time Limit (minutes)"
+                      icon={<ClockIcon />}
+                    />
+                    <span className="font-['Archivo'] text-[20px] font-normal text-[#A6B5BB]">
+                      Suggested time based on question count and difficulty
+                    </span>
+                  </div>
                 </div>
                 <div className="mb-[32px]" />
               </>

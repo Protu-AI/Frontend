@@ -34,14 +34,14 @@ interface QuizAttemptData {
 }
 
 // Clock Icon Component
-const ClockIcon = () => (
+const ClockIcon = ({ colorClass }) => (
   <svg
     width="20"
     height="20"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className="text-[#DC2626]"
+    className={colorClass} // Use the passed colorClass prop
     strokeWidth="2"
   >
     <circle
@@ -187,7 +187,7 @@ const QuizQuestion = ({
 );
 
 export function QuizPage() {
-  const { quizId } = useParams<{ quizId: string }>(); // Get quizId from URL
+  const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState(0);
   const [quizData, setQuizData] = useState<Question[]>([]);
@@ -396,10 +396,16 @@ export function QuizPage() {
         </div>
 
         {/* Right Side - Timer */}
-        <div className="flex items-center justify-center bg-[#FEE2E2] rounded-[25px] px-[32px] py-[12px]">
-          <ClockIcon />
+        <div className="flex items-center justify-center bg-[#EFE9FC] rounded-[25px] px-[32px] py-[12px]">
+          <ClockIcon
+            colorClass={timeLeft > 180 ? "text-[#1C0B43]" : "text-[#DC2626]"}
+          />
           <div className="w-[8px]" />
-          <span className="font-['Archivo'] text-[24px] font-medium text-[#DC2626] text-left">
+          <span
+            className={`font-['Archivo'] text-[24px] font-medium ${
+              timeLeft > 180 ? "text-[#1C0B43]" : "text-[#DC2626]"
+            } text-left`}
+          >
             {formatTime(timeLeft)}
           </span>
         </div>
