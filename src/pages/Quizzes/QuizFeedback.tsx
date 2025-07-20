@@ -190,7 +190,9 @@ function CourseCard({ course }: CourseCardProps) {
     const startIndex = fullText.indexOf(searchTerm);
 
     if (startIndex !== -1) {
-      return "This " + fullText.substring(startIndex);
+      return (
+        "This " + fullText.substring(startIndex, fullText.length - 50) + "..."
+      );
     }
     return null;
   }
@@ -252,7 +254,7 @@ function CourseCard({ course }: CourseCardProps) {
                 "https://img.icons8.com/ios-filled/100/EFE9FC/html-5.png"
               }
               alt={course.name}
-              className="h-[70px] w-auto hue-rotate-[330deg] saturate-[5000%] brightness-[40%] contrast-[94%]"
+              className="h-[70px] w-auto hue-rotate-[348deg] saturate-[5000%] brightness-[40%] contrast-[97%]"
             />
           </div>
           <div className="ml-6 flex-1">
