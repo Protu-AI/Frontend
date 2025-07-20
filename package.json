@@ -55,7 +55,6 @@
     "react-day-picker": "^9.2.7",
     "embla-carousel-react": "^8.0.0",
     "recharts": "^2.8.0",
-    "cmdk": "^0.3.0",
     "vaul": "^0.16.0",
     "react-hook-form": "^7.51.3",
     "input-otp": "^1.0.0",
