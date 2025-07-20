@@ -79,13 +79,7 @@
     "typescript": "5.3.3",
     "vite": "5.1.0",
     "@types/react-day-picker": "^9.0.0",
-    "@types/embla-carousel-react": "^8.0.0",
-    "@types/recharts": "^2.8.0",
-    "@types/vaul": "^0.16.0",
-    "@types/react-hook-form": "^7.51.3",
-    "@types/input-otp": "^1.0.0",
-    "@types/react-resizable-panels": "^1.0.0",
-    "@types/sonner": "^1.0.0"
+    "@types/react-hook-form": "^7.51.3"
   },
   "resolutions": {
     "postcss": "8.4.31"
